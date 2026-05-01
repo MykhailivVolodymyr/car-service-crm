@@ -1,3 +1,5 @@
+using CarService.Api.Extensions;
+using CarService.Api.Middleware;
 using CarService.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,10 +11,18 @@ builder.Services.AddDbContext<AutoServiceDbContext>(options =>
 
 
 builder.Services.AddControllers();
+
+builder.Services.AddApplicationServices();
+builder.Services.AddRepositories();
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
