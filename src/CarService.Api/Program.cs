@@ -5,13 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.AddSerilogLogging();
+
 builder.Services.AddDbContext<AutoServiceDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 builder.Services.AddControllers();
 
+// From extensions
 builder.Services.AddApplicationServices();
 builder.Services.AddRepositories();
 
@@ -22,6 +24,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 
 // Configure the HTTP request pipeline.
