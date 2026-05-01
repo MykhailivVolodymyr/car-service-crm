@@ -1,5 +1,6 @@
 using CarService.Api.Extensions;
 using CarService.Api.Middleware;
+using CarService.Application.Mappings;
 using CarService.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,11 @@ builder.Services.AddRepositories();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddMaps(typeof(MappingProfile).Assembly);
+});
 
 var app = builder.Build();
 
