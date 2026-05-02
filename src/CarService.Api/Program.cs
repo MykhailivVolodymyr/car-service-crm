@@ -1,8 +1,11 @@
 using CarService.Api.Extensions;
 using CarService.Api.Middleware;
 using CarService.Application.Configuration;
+using CarService.Application.DTOs.User.Auth.Validators;
 using CarService.Application.Mappings;
 using CarService.Infrastructure.Context;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +18,10 @@ builder.Services.AddDbContext<AutoServiceDbContext>(options =>
 builder.Services.AddJwtOptions(builder.Configuration);
 
 builder.Services.AddControllers();
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
 
 // From extensions
 builder.Services.AddIdentityServices(builder.Configuration);
