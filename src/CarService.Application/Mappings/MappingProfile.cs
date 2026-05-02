@@ -1,4 +1,8 @@
 ﻿using AutoMapper;
+using CarService.Application.DTOs.Manufacturer.CreateManufacturer;
+using CarService.Application.DTOs.Manufacturer.GetManufacturer;
+using CarService.Application.DTOs.PartCategory.CreatePartCategory;
+using CarService.Application.DTOs.PartCategory.GetPartCategory;
 using CarService.Application.DTOs.Service.CreateService;
 using CarService.Application.DTOs.Service.GetService;
 using CarService.Application.DTOs.Service.UpdateService;
@@ -33,6 +37,12 @@ namespace CarService.Application.Mappings
             CreateMap<CreateServiceDto, Service>();
             CreateMap<UpdateServiceDto, Service>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore());
+
+            CreateMap<PartCategory, PartCategoryDto>();
+            CreateMap<CreatePartCategoryDto, PartCategory>();
+
+            CreateMap<Manufacturer, ManufacturerDto>();
+            CreateMap<CreateManufacturerDto, Manufacturer>();
         }
     }
 }

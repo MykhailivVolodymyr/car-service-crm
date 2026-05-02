@@ -20,6 +20,8 @@ namespace CarService.Infrastructure.Repositories
         private IRoleRepository? _roles;
         private IServiceCategoryRepository? _serviceCategories;
         private IServiceRepository? _services;
+        private IPartCategoryRepository? _partCategories;
+        private IManufacturerRepository? _manufacturers;
 
         public UnitOfWork(AutoServiceDbContext context, IServiceProvider serviceProvider)
         {
@@ -31,6 +33,8 @@ namespace CarService.Infrastructure.Repositories
         public IRoleRepository Roles => _roles ??= _serviceProvider.GetRequiredService<IRoleRepository>();
         public IServiceCategoryRepository ServiceCategories => _serviceCategories ??= _serviceProvider.GetRequiredService<IServiceCategoryRepository>();
         public IServiceRepository Services => _services ??= _serviceProvider.GetRequiredService<IServiceRepository>();
+        public IPartCategoryRepository PartCategories => _partCategories ??= _serviceProvider.GetRequiredService<IPartCategoryRepository>();
+        public IManufacturerRepository Manufacturers => _manufacturers ??= _serviceProvider.GetRequiredService<IManufacturerRepository>();
 
         public async Task<int> CompleteAsync()
         {
