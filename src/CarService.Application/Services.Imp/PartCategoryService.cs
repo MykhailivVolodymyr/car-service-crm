@@ -80,9 +80,9 @@ namespace CarService.Application.Services.Imp
             if (category == null)
                 throw new NotFoundException($"Cannot delete: part category with ID {id} was not found.");
 
-            //var hasParts = await _unitOfWork.Parts.AnyAsync(p => p.CategoryId == id);
-            //if (hasParts)
-            //    throw new BadRequestException("Cannot delete a category that contains spare parts.");
+            var hasParts = await _unitOfWork.Parts.AnyAsync(p => p.CategoryId == id);
+            if (hasParts)
+                throw new BadRequestException("Cannot delete a category that contains spare parts.");
 
             string categoryName = category.Name;
             _unitOfWork.PartCategories.Delete(category);

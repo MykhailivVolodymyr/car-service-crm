@@ -80,9 +80,9 @@ namespace CarService.Application.Services.Imp
             if (manufacturer == null)
                 throw new NotFoundException($"Cannot delete: manufacturer with ID {id} was not found.");
 
-            //var hasParts = await _unitOfWork.Parts.AnyAsync(p => p.ManufacturerId == id);
-            //if (hasParts)
-            //    throw new BadRequestException("Cannot delete a manufacturer that has associated parts in the warehouse.");
+            var hasParts = await _unitOfWork.Parts.AnyAsync(p => p.ManufacturerId == id);
+            if (hasParts)
+                throw new BadRequestException("Cannot delete a manufacturer that has associated parts in the warehouse.");
 
             string manufacturerName = manufacturer.Name;
             _unitOfWork.Manufacturers.Delete(manufacturer);
