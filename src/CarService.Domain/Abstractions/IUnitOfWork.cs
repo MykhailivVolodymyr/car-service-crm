@@ -10,6 +10,8 @@ namespace CarService.Domain.Abstractions
     {
         IUserRepository Users { get; }
         IRoleRepository Roles { get; }
+        IServiceCategoryRepository ServiceCategories { get; }
+        IServiceRepository Services { get; }
         Task<int> CompleteAsync();
     }
 }

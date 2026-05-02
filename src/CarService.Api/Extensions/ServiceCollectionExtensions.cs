@@ -20,6 +20,8 @@ namespace CarService.Api.Extensions
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
+            services.AddScoped<IServiceAppService, ServiceAppService>();
 
             return services;
         }
@@ -28,6 +30,8 @@ namespace CarService.Api.Extensions
         {
             services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IServiceCategoryRepository, ServiceCategoryRepository>();
+            services.AddScoped<IServiceRepository, ServiceRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             return services;

@@ -1,4 +1,9 @@
 ﻿using AutoMapper;
+using CarService.Application.DTOs.Service.CreateService;
+using CarService.Application.DTOs.Service.GetService;
+using CarService.Application.DTOs.Service.UpdateService;
+using CarService.Application.DTOs.ServiceCategory.CreateServiceCategory;
+using CarService.Application.DTOs.ServiceCategory.GetServiceCategory;
 using CarService.Application.DTOs.User.GetUser;
 using CarService.Application.DTOs.User.UpdateUser;
 using CarService.Infrastructure;
@@ -18,6 +23,16 @@ namespace CarService.Application.Mappings
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
 
             CreateMap<UserUpdateDto, User>();
+
+            CreateMap<ServiceCategory, CategoryDto>();
+            CreateMap<CreateCategoryDto, ServiceCategory>();
+
+            CreateMap<Service, ServiceDto>()
+               .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name));
+
+            CreateMap<CreateServiceDto, Service>();
+            CreateMap<UpdateServiceDto, Service>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
         }
     }
 }

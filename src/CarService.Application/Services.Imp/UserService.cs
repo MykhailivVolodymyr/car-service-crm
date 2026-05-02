@@ -5,6 +5,7 @@ using CarService.Application.DTOs.User.UpdateUser;
 using CarService.Application.Exceptions;
 using CarService.Domain.Abstractions;
 using CarService.Infrastructure;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,21 +18,23 @@ namespace CarService.Application.Services.Imp
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ILogger<UserService> _logger;
 
-        public UserService(IUnitOfWork unitOfWork, IMapper mapper)
+        public UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<MasterCreatedResponseDto> CreateMasterAsync(CreateMasterDto createDto)
         {
             if (await _unitOfWork.Users.AnyAsync(u => u.Email == createDto.Email))
-                throw new BadRequestException("Цей Email вже зайнятий.");
+                throw new BadRequestException("This email address is already in use.");
 
             var masterRole = await _unitOfWork.Roles.GetFirstOrDefaultAsync(r => r.Name == "Майстер");
             if (masterRole == null)
-                throw new NotFoundException("Роль 'Майстер' не знайдена в БД.");
+                throw new NotFoundException("Role 'Master' was not found in the database.");
 
             string temporaryPassword = GenerateLogicalPassword(createDto.FullName);
 
@@ -48,6 +51,8 @@ namespace CarService.Application.Services.Imp
             await _unitOfWork.Users.AddAsync(user);
             await _unitOfWork.CompleteAsync();
 
+            _logger.LogInformation("New master created: {Email} (ID: {Id})", user.Email, user.Id);
+
             return new MasterCreatedResponseDto(user.Email, temporaryPassword);
         }
 
@@ -56,7 +61,7 @@ namespace CarService.Application.Services.Imp
             var user = await _unitOfWork.Users.GetByIdAsync(id);
 
             if (user == null)
-                throw new NotFoundException($"Користувача з ID {id} не знайдено.");
+                throw new NotFoundException($"User with ID {id} was not found.");
 
             return _mapper.Map<UserDto>(user);
         }
@@ -78,14 +83,13 @@ namespace CarService.Application.Services.Imp
             var user = await _unitOfWork.Users.GetByIdAsync(updateDto.Id);
 
             if (user == null)
-                throw new NotFoundException($"Неможливо оновити: користувача з ID {updateDto.Id} не знайдено.");
+                throw new NotFoundException($"Cannot update: user with ID {updateDto.Id} was not found.");
 
             _mapper.Map(updateDto, user);
-
             _unitOfWork.Users.Update(user);
-
             await _unitOfWork.CompleteAsync();
-       
+
+            _logger.LogInformation("User data for ID {Id} has been updated.", user.Id);
         }
 
         public async Task DeleteUserAsync(int id)
@@ -93,11 +97,12 @@ namespace CarService.Application.Services.Imp
             var user = await _unitOfWork.Users.GetByIdAsync(id);
 
             if (user == null)
-                throw new NotFoundException($"Неможливо видалити: користувача з ID {id} не знайдено.");
+                throw new NotFoundException($"Cannot delete: user with ID {id} was not found.");
 
             _unitOfWork.Users.Delete(user);
-
             await _unitOfWork.CompleteAsync();
+
+            _logger.LogWarning("User {Email} (ID: {Id}) has been deleted from the system.", user.Email, user.Id);
         }
 
         public async Task ToggleStatusAsync(int id)
@@ -105,23 +110,20 @@ namespace CarService.Application.Services.Imp
             var user = await _unitOfWork.Users.GetByIdAsync(id);
 
             if (user == null)
-                throw new NotFoundException($"Користувача з ID {id} не знайдено.");
+                throw new NotFoundException($"User with ID {id} was not found.");
 
             user.IsActive = !user.IsActive;
 
             _unitOfWork.Users.Update(user);
             await _unitOfWork.CompleteAsync();
+
+            _logger.LogInformation("Status for user {Id} changed to Active = {Status}.", user.Id, user.IsActive);
         }
 
         private string GenerateLogicalPassword(string fullName)
         {
-            // Беремо перше слово з ПІБ (наприклад, "Бондаренко")
             string lastName = fullName.Trim().Split(' ')[0];
-
-            // Робимо першу літеру великою, інші — маленькими (Capitalize)
             string formattedName = char.ToUpper(lastName[0]) + lastName.Substring(1).ToLower();
-
-            // Додаємо поточний рік
             int year = DateTime.Now.Year;
 
             return $"{formattedName}{year}";
