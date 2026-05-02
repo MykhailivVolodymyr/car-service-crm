@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Azure.Core.HttpHeader;
 
 namespace CarService.Infrastructure.Repositories
 {
@@ -15,7 +16,8 @@ namespace CarService.Infrastructure.Repositories
         private readonly IServiceProvider _serviceProvider;
         private bool _disposed = false;
 
-       
+        private IUserRepository? _users;
+        private IRoleRepository? _roles;
 
         public UnitOfWork(AutoServiceDbContext context, IServiceProvider serviceProvider)
         {
@@ -23,7 +25,8 @@ namespace CarService.Infrastructure.Repositories
             _serviceProvider = serviceProvider;
         }
 
-       
+        public IUserRepository Users => _users ??= _serviceProvider.GetRequiredService<IUserRepository>();
+        public IRoleRepository Roles => _roles ??= _serviceProvider.GetRequiredService<IRoleRepository>();
 
         public async Task<int> CompleteAsync()
         {

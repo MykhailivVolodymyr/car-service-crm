@@ -301,6 +301,7 @@ public partial class AutoServiceDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(100);
         });
 
+        modelBuilder.SeedInitialData();
         OnModelCreatingPartial(modelBuilder);
     }
 
