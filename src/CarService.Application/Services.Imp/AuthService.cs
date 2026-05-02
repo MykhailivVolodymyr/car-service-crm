@@ -27,11 +27,11 @@ namespace CarService.Application.Services.Imp
 
         public async Task RegisterManagerAsync(RegisterRequestDto request)
         {
-            _logger.LogInformation("Attempting to register a new manager with login: {Login}", request.Login);
+            _logger.LogInformation("Attempting to register a new manager with login: {Email}", request.Email);
 
-            if (await _unitOfWork.Users.AnyAsync(u => u.Login == request.Login))
+            if (await _unitOfWork.Users.AnyAsync(u => u.Email == request.Email))
             {
-                _logger.LogWarning("Registration failed: User with login {Login} already exists", request.Login);
+                _logger.LogWarning("Registration failed: User with login {Email} already exists", request.Email);
                 throw new BadRequestException("User with this login already exists.");
             }
 
@@ -45,7 +45,7 @@ namespace CarService.Application.Services.Imp
             var user = new User
             {
                 FullName = request.FullName,
-                Login = request.Login,
+                Email = request.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 Phone = request.Phone,
                 RoleId = managerRole.Id,
@@ -55,18 +55,18 @@ namespace CarService.Application.Services.Imp
             await _unitOfWork.Users.AddAsync(user);
             await _unitOfWork.CompleteAsync();
 
-            _logger.LogInformation("Manager {Login} successfully registered with ID: {Id}", user.Login, user.Id);
+            _logger.LogInformation("Manager {Email} successfully registered with ID: {Id}", user.Email, user.Id);
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request)
         {
-            _logger.LogInformation("Login attempt for user: {Login}", request.Login);
+            _logger.LogInformation("Login attempt for user: {Email}", request.Email);
 
-            var user = await _unitOfWork.Users.GetFirstOrDefaultAsync(u => u.Login == request.Login);
+            var user = await _unitOfWork.Users.GetFirstOrDefaultAsync(u => u.Email == request.Email);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
-                _logger.LogWarning("Invalid login attempt for user: {Login}", request.Login);
+                _logger.LogWarning("Invalid login attempt for user: {Email}", request.Email);
                 throw new BadRequestException("Invalid login or password.");
             }
 
@@ -75,7 +75,7 @@ namespace CarService.Application.Services.Imp
 
             var token = _tokenService.CreateToken(user, roleName);
 
-            _logger.LogInformation("User {Login} successfully authenticated with role {Role}", request.Login, roleName);
+            _logger.LogInformation("User {Email} successfully authenticated with role {Role}", request.Email, roleName);
 
             return new AuthResponseDto(token, user.FullName, roleName);
         }

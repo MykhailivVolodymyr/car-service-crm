@@ -8,7 +8,7 @@ namespace CarService.Application.DTOs.User.Auth
 {
     public record RegisterRequestDto(
         string FullName,
-        string Login,
+        string Email,
         string Password,
         string? Phone
     );

@@ -234,11 +234,11 @@ public partial class AutoServiceDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Users__3214EC07C0296B1B");
 
-            entity.HasIndex(e => e.Login, "UQ__Users__5E55825B516C6AA6").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__Users__5E55825B516C6AA6").IsUnique();
 
             entity.Property(e => e.FullName).HasMaxLength(200);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.Login).HasMaxLength(100);
+            entity.Property(e => e.Email).HasMaxLength(100);
             entity.Property(e => e.Phone).HasMaxLength(20);
 
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
