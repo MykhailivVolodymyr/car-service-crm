@@ -9,6 +9,6 @@ namespace CarService.Domain.Abstractions
 {
     public interface IUserRepository: IRepository<User>
     {
-
+        Task<IEnumerable<User>> GetUsersByRoleAsync(string roleName);
     }
 }

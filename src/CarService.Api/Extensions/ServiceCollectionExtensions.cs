@@ -18,6 +18,7 @@ namespace CarService.Api.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
             services.AddScoped<ITokenService, TokenService>();
 
             return services;
@@ -125,20 +126,14 @@ namespace CarService.Api.Extensions
 
         public static IServiceCollection AddJwtOptions(this IServiceCollection services, IConfiguration config)
         {
-            // 1. Створюємо екземпляр класу опцій
             var jwtOptions = new JwtOptions();
 
-            // 2. Зчитуємо секцію "Jwt". 
-            // .Bind() пройдеться по appsettings.json ТА User Secrets і склеїть їх.
             config.GetSection(JwtOptions.SectionName).Bind(jwtOptions);
-
-            // 3. (Важливо) Валідація: перевіряємо, чи підтягнувся ключ із секретів
             if (string.IsNullOrEmpty(jwtOptions.Key))
             {
                 throw new InvalidOperationException("JWT Secret Key is missing. Check your User Secrets!");
             }
 
-            // 4. Реєструємо налаштований об'єкт в системі IOptions
             services.Configure<JwtOptions>(options =>
             {
                 options.Key = jwtOptions.Key;

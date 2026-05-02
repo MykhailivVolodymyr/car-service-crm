@@ -1,4 +1,7 @@
 ﻿using AutoMapper;
+using CarService.Application.DTOs.User.GetUser;
+using CarService.Application.DTOs.User.UpdateUser;
+using CarService.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +14,10 @@ namespace CarService.Application.Mappings
     {
         public MappingProfile()
         {
-            // Приклад: мапінг з сутності бази в DTO і навпаки
-            // CreateMap<Vehicle, VehicleDto>().ReverseMap();
-            // CreateMap<Order, OrderDto>();
+            CreateMap<User, UserDto>()
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
+
+            CreateMap<UserUpdateDto, User>();
         }
     }
 }
