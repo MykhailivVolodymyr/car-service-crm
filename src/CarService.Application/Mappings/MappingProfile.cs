@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using CarService.Application.DTOs.Client.CreateClient;
+using CarService.Application.DTOs.Client.GetClient;
 using CarService.Application.DTOs.Manufacturer.CreateManufacturer;
 using CarService.Application.DTOs.Manufacturer.GetManufacturer;
 using CarService.Application.DTOs.Part.CreatePart;
@@ -52,6 +54,9 @@ namespace CarService.Application.Mappings
 
             CreateMap<CreatePartDto, Part>()
                 .ForMember(d => d.Id, o => o.Ignore());
+
+            CreateMap<Client, ClientDto>();
+            CreateMap<CreateClientDto, Client>();
         }
     }
 }

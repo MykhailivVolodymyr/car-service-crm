@@ -25,6 +25,7 @@ namespace CarService.Api.Extensions
             services.AddScoped<IPartCategoryService, PartCategoryService>();
             services.AddScoped<IManufacturerService, ManufacturerService>();
             services.AddScoped<IPartService, PartService>();
+            services.AddScoped<IClientService, ClientService>();
 
             return services;
         }
@@ -38,6 +39,7 @@ namespace CarService.Api.Extensions
             services.AddScoped<IPartCategoryRepository, PartCategoryRepository>();
             services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
             services.AddScoped<IPartRepository, PartRepository>();
+            services.AddScoped<IClientRepository, ClientRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             return services;

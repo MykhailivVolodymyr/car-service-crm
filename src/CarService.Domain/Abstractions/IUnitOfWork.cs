@@ -15,6 +15,7 @@ namespace CarService.Domain.Abstractions
         IPartCategoryRepository PartCategories { get; }
         IManufacturerRepository Manufacturers { get; }
         IPartRepository Parts { get; }
+        IClientRepository Clients { get; }
         Task<int> CompleteAsync();
     }
 }
