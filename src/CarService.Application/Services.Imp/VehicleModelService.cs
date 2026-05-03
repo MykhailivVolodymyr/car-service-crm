@@ -132,8 +132,8 @@ namespace CarService.Application.Services.Imp
                 throw new NotFoundException($"Модель з ID {id} не знайдена.");
             }
 
-            // if (await _unitOfWork.Vehicles.AnyAsync(v => v.ModelId == id))
-            //    throw new BadRequestException("Неможливо видалити модель, оскільки вона пов'язана з автомобілями.");
+            if (await _unitOfWork.Vehicles.AnyAsync(v => v.ModelId == id))
+                throw new BadRequestException("Неможливо видалити модель, оскільки вона пов'язана з автомобілями.");
 
             _unitOfWork.VehicleModels.Delete(model);
             await _unitOfWork.CompleteAsync();

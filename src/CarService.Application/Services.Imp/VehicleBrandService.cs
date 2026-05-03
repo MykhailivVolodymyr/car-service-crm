@@ -80,9 +80,9 @@ namespace CarService.Application.Services.Imp
             var brand = await _unitOfWork.VehicleBrands.GetByIdAsync(id);
             if (brand == null) throw new NotFoundException($"Brand with ID {id} not found.");
 
-            //var hasModels = await _unitOfWork.VehicleModels.AnyAsync(m => m.BrandId == id);
-            //if (hasModels)
-            //    throw new BadRequestException("Cannot delete brand because it has associated vehicle models.");
+            var hasModels = await _unitOfWork.VehicleModels.AnyAsync(m => m.BrandId == id);
+            if (hasModels)
+                throw new BadRequestException("Cannot delete brand because it has associated vehicle models.");
 
             _unitOfWork.VehicleBrands.Delete(brand);
             await _unitOfWork.CompleteAsync();

@@ -14,6 +14,7 @@ using CarService.Application.DTOs.ServiceCategory.CreateServiceCategory;
 using CarService.Application.DTOs.ServiceCategory.GetServiceCategory;
 using CarService.Application.DTOs.User.GetUser;
 using CarService.Application.DTOs.User.UpdateUser;
+using CarService.Application.DTOs.Vehicle.GetVehicle;
 using CarService.Application.DTOs.VehicleBrand.CreateVehicleBrand;
 using CarService.Application.DTOs.VehicleBrand.GetVehicleBrand;
 using CarService.Application.DTOs.VehicleModel.GetVehicleModel;
@@ -67,6 +68,11 @@ namespace CarService.Application.Mappings
             CreateMap<VehicleModel, VehicleModelDto>()
                 .ForMember(dest => dest.BrandName, opt => opt.MapFrom(src => src.Brand.Name));
 
-        }
+            CreateMap<Vehicle, VehicleDto>()
+              .ForCtorParam("BrandName", opt => opt.MapFrom(src => src.Model.Brand.Name))
+              .ForCtorParam("ModelName", opt => opt.MapFrom(src => src.Model.Name))
+              .ForCtorParam("ClientFullName", opt => opt.MapFrom(src => src.Client.FullName))
+              .ForCtorParam("ClientPhone", opt => opt.MapFrom(src => src.Client.Phone));
+                }
     }
 }

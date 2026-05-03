@@ -18,6 +18,7 @@ namespace CarService.Domain.Abstractions
         IClientRepository Clients { get; }
         IVehicleBrandRepository VehicleBrands { get; }
         IVehicleModelRepository VehicleModels { get; }
+        IVehicleRepository Vehicles { get; }
 
         Task<int> CompleteAsync();
     }
