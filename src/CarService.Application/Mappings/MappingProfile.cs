@@ -14,6 +14,9 @@ using CarService.Application.DTOs.ServiceCategory.CreateServiceCategory;
 using CarService.Application.DTOs.ServiceCategory.GetServiceCategory;
 using CarService.Application.DTOs.User.GetUser;
 using CarService.Application.DTOs.User.UpdateUser;
+using CarService.Application.DTOs.VehicleBrand.CreateVehicleBrand;
+using CarService.Application.DTOs.VehicleBrand.GetVehicleBrand;
+using CarService.Application.DTOs.VehicleModel.GetVehicleModel;
 using CarService.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -57,6 +60,13 @@ namespace CarService.Application.Mappings
 
             CreateMap<Client, ClientDto>();
             CreateMap<CreateClientDto, Client>();
+
+            CreateMap<VehicleBrand, VehicleBrandDto>();
+            CreateMap<CreateVehicleBrandDto, VehicleBrand>();
+
+            CreateMap<VehicleModel, VehicleModelDto>()
+                .ForMember(dest => dest.BrandName, opt => opt.MapFrom(src => src.Brand.Name));
+
         }
     }
 }
