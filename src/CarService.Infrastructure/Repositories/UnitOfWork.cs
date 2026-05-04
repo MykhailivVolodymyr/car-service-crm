@@ -28,6 +28,7 @@ namespace CarService.Infrastructure.Repositories
         private IVehicleModelRepository? _vehicleModels;
         private IVehicleRepository? _vehicles;
         private IWorkPostRepository? _workPosts;
+        private IOrderRepository? _orders;
 
         public UnitOfWork(AutoServiceDbContext context, IServiceProvider serviceProvider)
         {
@@ -47,6 +48,7 @@ namespace CarService.Infrastructure.Repositories
         public IVehicleModelRepository VehicleModels => _vehicleModels ??= _serviceProvider.GetRequiredService<IVehicleModelRepository>();
         public IVehicleRepository Vehicles => _vehicles ??= _serviceProvider.GetRequiredService<IVehicleRepository>();
         public IWorkPostRepository WorkPosts => _workPosts ??= _serviceProvider.GetRequiredService<IWorkPostRepository>();
+        public IOrderRepository Orders => _orders ??= _serviceProvider.GetRequiredService<IOrderRepository>();
 
 
         public async Task<int> CompleteAsync()

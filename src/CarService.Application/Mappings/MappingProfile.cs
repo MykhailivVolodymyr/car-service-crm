@@ -3,6 +3,7 @@ using CarService.Application.DTOs.Client.CreateClient;
 using CarService.Application.DTOs.Client.GetClient;
 using CarService.Application.DTOs.Manufacturer.CreateManufacturer;
 using CarService.Application.DTOs.Manufacturer.GetManufacturer;
+using CarService.Application.DTOs.Order.GetOrder;
 using CarService.Application.DTOs.Part.CreatePart;
 using CarService.Application.DTOs.Part.GetPart;
 using CarService.Application.DTOs.PartCategory.CreatePartCategory;
@@ -73,11 +74,19 @@ namespace CarService.Application.Mappings
             CreateMap<Vehicle, VehicleDto>()
               .ForCtorParam("BrandName", opt => opt.MapFrom(src => src.Model.Brand.Name))
               .ForCtorParam("ModelName", opt => opt.MapFrom(src => src.Model.Name))
-              .ForCtorParam("ClientFullName", opt => opt.MapFrom(src => src.Client.FullName))
-              .ForCtorParam("ClientPhone", opt => opt.MapFrom(src => src.Client.Phone));
+              .ForCtorParam("ClientFullName", opt => opt.MapFrom(src => src.Client!.FullName))
+              .ForCtorParam("ClientPhone", opt => opt.MapFrom(src => src.Client!.Phone));
 
             CreateMap<WorkPost, WorkPostDto>();
             CreateMap<CreateWorkPostDto, WorkPost>();
+
+            CreateMap<Order, OrderDto>()
+                .ForCtorParam("VehicleDetails", opt => opt.MapFrom(src =>
+                    $"{src.Vehicle.Model.Brand.Name} {src.Vehicle.Model.Name} ({src.Vehicle.LicensePlate})"))
+                .ForCtorParam("ClientId", opt => opt.MapFrom(src => src.Vehicle.ClientId))
+                .ForCtorParam("ClientName", opt => opt.MapFrom(src => src.Vehicle.Client!.FullName))
+                .ForCtorParam("ClientPhone", opt => opt.MapFrom(src => src.Vehicle.Client!.Phone))
+                .ForCtorParam("StatusName", opt => opt.MapFrom(src => src.Status.Name));
         }
     }
 }
