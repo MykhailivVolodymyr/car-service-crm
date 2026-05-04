@@ -30,6 +30,7 @@ namespace CarService.Infrastructure.Repositories
         private IWorkPostRepository? _workPosts;
         private IOrderRepository? _orders;
         private IOrderServiceRepository? _orderServices;
+        private IOrderPartRepository? _orderParts;
 
         public UnitOfWork(AutoServiceDbContext context, IServiceProvider serviceProvider)
         {
@@ -51,6 +52,7 @@ namespace CarService.Infrastructure.Repositories
         public IWorkPostRepository WorkPosts => _workPosts ??= _serviceProvider.GetRequiredService<IWorkPostRepository>();
         public IOrderRepository Orders => _orders ??= _serviceProvider.GetRequiredService<IOrderRepository>();
         public IOrderServiceRepository OrderServices => _orderServices ??= _serviceProvider.GetRequiredService<IOrderServiceRepository>();
+        public IOrderPartRepository OrderParts => _orderParts ??= _serviceProvider.GetRequiredService<IOrderPartRepository>();
 
 
         public async Task<int> CompleteAsync()

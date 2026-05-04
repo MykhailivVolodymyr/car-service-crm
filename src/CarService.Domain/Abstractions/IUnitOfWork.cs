@@ -22,6 +22,7 @@ namespace CarService.Domain.Abstractions
         IWorkPostRepository WorkPosts { get; }
         IOrderRepository Orders { get; }
         IOrderServiceRepository OrderServices { get; }
+        IOrderPartRepository OrderParts { get; }
 
         Task<int> CompleteAsync();
     }
