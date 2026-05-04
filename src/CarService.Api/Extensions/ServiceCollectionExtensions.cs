@@ -29,6 +29,7 @@ namespace CarService.Api.Extensions
             services.AddScoped<IVehicleBrandService, VehicleBrandService>();
             services.AddScoped<IVehicleModelService, VehicleModelService>();
             services.AddScoped<IVehicleService, VehicleService>();
+            services.AddScoped<IWorkPostService, WorkPostService>();
 
             return services;
         }
@@ -46,6 +47,7 @@ namespace CarService.Api.Extensions
             services.AddScoped<IVehicleBrandRepository, VehicleBrandRepository>();
             services.AddScoped<IVehicleModelRepository, VehicleModelRepository>();
             services.AddScoped<IVehicleRepository, VehicleRepository>();
+            services.AddScoped<IWorkPostRepository, WorkPostRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             return services;

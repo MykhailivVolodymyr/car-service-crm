@@ -18,6 +18,8 @@ using CarService.Application.DTOs.Vehicle.GetVehicle;
 using CarService.Application.DTOs.VehicleBrand.CreateVehicleBrand;
 using CarService.Application.DTOs.VehicleBrand.GetVehicleBrand;
 using CarService.Application.DTOs.VehicleModel.GetVehicleModel;
+using CarService.Application.DTOs.WorkPost.CreateWorkPost;
+using CarService.Application.DTOs.WorkPost.GetWorkPost;
 using CarService.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -73,6 +75,9 @@ namespace CarService.Application.Mappings
               .ForCtorParam("ModelName", opt => opt.MapFrom(src => src.Model.Name))
               .ForCtorParam("ClientFullName", opt => opt.MapFrom(src => src.Client.FullName))
               .ForCtorParam("ClientPhone", opt => opt.MapFrom(src => src.Client.Phone));
-                }
+
+            CreateMap<WorkPost, WorkPostDto>();
+            CreateMap<CreateWorkPostDto, WorkPost>();
+        }
     }
 }
