@@ -14,18 +14,18 @@ using System.Threading.Tasks;
 
 namespace CarService.Application.Services.Imp
 {
-    public class OrderService : IOrderService
+    public class OrderAppService : IOrderService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IVehicleService _vehicleService;
-        private readonly ILogger<OrderService> _logger;
+        private readonly ILogger<OrderAppService> _logger;
 
-        public OrderService(
+        public OrderAppService(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IVehicleService vehicleService,
-            ILogger<OrderService> logger)
+            ILogger<OrderAppService> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;

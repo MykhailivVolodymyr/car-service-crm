@@ -4,6 +4,7 @@ using CarService.Application.DTOs.Client.GetClient;
 using CarService.Application.DTOs.Manufacturer.CreateManufacturer;
 using CarService.Application.DTOs.Manufacturer.GetManufacturer;
 using CarService.Application.DTOs.Order.GetOrder;
+using CarService.Application.DTOs.OrderService.GetOrderService;
 using CarService.Application.DTOs.Part.CreatePart;
 using CarService.Application.DTOs.Part.GetPart;
 using CarService.Application.DTOs.PartCategory.CreatePartCategory;
@@ -87,6 +88,10 @@ namespace CarService.Application.Mappings
                 .ForCtorParam("ClientName", opt => opt.MapFrom(src => src.Vehicle.Client!.FullName))
                 .ForCtorParam("ClientPhone", opt => opt.MapFrom(src => src.Vehicle.Client!.Phone))
                 .ForCtorParam("StatusName", opt => opt.MapFrom(src => src.Status.Name));
+
+            CreateMap<OrderService, OrderServiceDto>()
+                .ForCtorParam("ServiceName", opt => opt.MapFrom(src => src.CustomName))
+                .ForCtorParam("TotalPrice", opt => opt.MapFrom(src => src.Price * (src.Quantity ?? 1)));
         }
     }
 }
