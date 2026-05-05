@@ -19,12 +19,14 @@ namespace CarService.Application.Services.Imp
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<UserService> _logger;
+        private readonly INotificationService _notificationService;
 
-        public UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger)
+        public UserService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<UserService> logger, INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
         public async Task<MasterCreatedResponseDto> CreateMasterAsync(CreateMasterDto createDto)
@@ -52,6 +54,14 @@ namespace CarService.Application.Services.Imp
             await _unitOfWork.CompleteAsync();
 
             _logger.LogInformation("New master created: {Email} (ID: {Id})", user.Email, user.Id);
+
+            string emailBody = $@"
+                <h3>Вітаємо у команді, {createDto.FullName}!</h3>
+                <p>Ваш обліковий запис майстра створено.</p>
+                <p><b>Логін:</b> {createDto.Email}</p>
+                <p><b>Пароль:</b> {temporaryPassword}</p>";
+
+            await _notificationService.SendNotificationAsync(createDto.Email, emailBody, "Реєстрація майстра");
 
             return new MasterCreatedResponseDto(user.Email, temporaryPassword);
         }

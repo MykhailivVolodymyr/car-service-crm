@@ -39,7 +39,9 @@ namespace CarService.Infrastructure.Repositories
                     .ThenInclude(v => v.Client)
                 .Include(o => o.Vehicle)
                     .ThenInclude(v => v.Model)
-                        .ThenInclude(m => m.Brand);
+                        .ThenInclude(m => m.Brand)
+                .Include(o => o.OrderParts)
+                .Include(o => o.OrderServices);
         }
     }
 }

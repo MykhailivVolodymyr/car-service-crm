@@ -1,6 +1,7 @@
 ﻿using CarService.Application.DTOs.Order.CreateOrder;
 using CarService.Application.DTOs.Order.GetOrder;
 using CarService.Application.Services;
+using CarService.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +13,12 @@ namespace CarService.Api.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
+        private readonly IPdfService _pdfService;
 
-        public OrdersController(IOrderService orderService)
+        public OrdersController(IOrderService orderService, IPdfService pdfService)
         {
             _orderService = orderService;
+            _pdfService = pdfService;
         }
 
         [HttpGet]
@@ -96,6 +99,16 @@ namespace CarService.Api.Controllers
         {
             await _orderService.DeleteAsync(id);
             return NoContent();
+        }
+
+        [HttpGet("{id}/print")]
+        public async Task<IActionResult> PrintOrderInvoice(int id)
+        {
+            var invoiceData = await _orderService.GetInvoiceDataAsync(id);
+
+            var pdfBytes = _pdfService.GenerateOrderInvoice(invoiceData);
+
+            return File(pdfBytes, "application/pdf", $"Order_{id}_Invoice.pdf");
         }
     }
 }

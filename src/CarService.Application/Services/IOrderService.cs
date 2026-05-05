@@ -19,5 +19,7 @@ namespace CarService.Application.Services
         Task UpdateAsync(int id, CreateOrderDto dto);
         Task UpdateStatusAsync(int id, int statusId);
         Task DeleteAsync(int id);
+
+        Task<InvoiceDto> GetInvoiceDataAsync(int orderId);
     }
 }

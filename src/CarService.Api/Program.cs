@@ -4,6 +4,7 @@ using CarService.Application.Configuration;
 using CarService.Application.DTOs.User.Auth.Validators;
 using CarService.Application.Mappings;
 using CarService.Infrastructure.Context;
+using CarService.Infrastructure.Services.Background;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
 
+builder.Services.AddHostedService<AppointmentReminderService>();
 // From extensions
 builder.Services.AddIdentityServices(builder.Configuration);
 builder.Services.AddApplicationServices();

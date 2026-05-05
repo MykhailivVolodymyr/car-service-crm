@@ -34,6 +34,8 @@ namespace CarService.Api.Extensions
             services.AddScoped<IOrderServiceService, OrderServiceService>();
             services.AddScoped<IOrderPartService, OrderPartService>();
             services.AddScoped<IScheduleService, ScheduleService>();
+            services.AddScoped<IPdfService, PdfService>();
+            services.AddScoped<INotificationService, EmailNotificationService>();
 
             return services;
         }

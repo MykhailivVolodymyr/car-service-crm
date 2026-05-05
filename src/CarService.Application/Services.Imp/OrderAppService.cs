@@ -20,17 +20,24 @@ namespace CarService.Application.Services.Imp
         private readonly IMapper _mapper;
         private readonly IVehicleService _vehicleService;
         private readonly ILogger<OrderAppService> _logger;
+        private readonly INotificationService _notificationService;
+        private readonly IPdfService _pdfService;
 
         public OrderAppService(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IVehicleService vehicleService,
-            ILogger<OrderAppService> logger)
+            ILogger<OrderAppService> logger,
+            INotificationService notificationService,
+            IPdfService pdfService
+            )
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _vehicleService = vehicleService;
             _logger = logger;
+            _notificationService = notificationService;
+            _pdfService = pdfService;
         }
 
         public async Task<IEnumerable<OrderDto>> GetAllAsync()
@@ -118,10 +125,48 @@ namespace CarService.Application.Services.Imp
             order.StatusId = statusId;
 
             // Змінюємо на 5 (Закрито), щоб зафіксувати фінальну дату
-            if (statusId == 5)
+            if (statusId == 5 || statusId == 4)
             {
                 order.ClosedAt = DateTime.UtcNow;
                 _logger.LogInformation("Order #{OrderId} marked as Closed. ClosedAt timestamp set.", id);
+
+                if (statusId == 4 || statusId == 5) // Готово або Закрито
+                {
+                    order.ClosedAt = DateTime.UtcNow;
+
+                    if (!string.IsNullOrWhiteSpace(order.Vehicle.Client?.Email))
+                    {
+                        try
+                        {
+                            var invoiceData = await GetInvoiceDataAsync(order.Id);
+
+                            var pdfBytes = _pdfService.GenerateOrderInvoice(invoiceData);
+
+                            string message = $@"
+                                <h2>Ваше авто готове!</h2>
+                                <p>Шановний {order.Vehicle.Client.FullName}, роботи по замовленню №{order.Id} завершені.</p>
+                                <p>Автомобіль: <b>{order.Vehicle.Model.Brand.Name} {order.Vehicle.Model.Name} ({order.Vehicle.LicensePlate})</b></p>
+                                <p>Детальний рахунок ви знайдете у вкладеному файлі.</p>
+                                <p>Сума до сплати: <b>{order.TotalAmount:F2} грн.</b></p>";
+
+                            await _notificationService.SendNotificationAsync(
+                                order.Vehicle.Client.Email,
+                                message,
+                                $"Рахунок за замовлення #{order.Id} - CarService",
+                                pdfBytes,
+                                $"Invoice_{order.Id}.pdf"
+                            );
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Помилка відправки листа з вкладенням");
+                        }
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Customer email for Order #{OrderId} is missing. Notification skipped.", id);
+                }
             }
             else if (oldStatusId == 5)
             {
@@ -204,6 +249,36 @@ namespace CarService.Application.Services.Imp
             await _unitOfWork.CompleteAsync();
 
             _logger.LogCritical("Order #{OrderId} was permanently deleted.", id);
+        }
+
+        public async Task<InvoiceDto> GetInvoiceDataAsync(int orderId)
+        {
+            var order = await _unitOfWork.Orders.GetByIdAsync(orderId);
+
+            if (order == null) throw new NotFoundException("Замовлення не знайдено.");
+
+            if (order.StatusId != 4 && order.StatusId != 5)
+            {
+                throw new BadRequestException("Рахунок можна згенерувати лише для замовлень у статусі 'Готово' або 'Закрито'.");
+            }
+
+            var vehicle = order.Vehicle;
+
+            return new InvoiceDto(
+                OrderId: order.Id,
+                BrandName: vehicle.Model.Brand.Name,
+                ModelName: vehicle.Model.Name,
+                Vin: vehicle.Vin,
+                LicensePlate: vehicle.LicensePlate,
+                Mileage: order.Mileage,
+                CreatedAt: order.CreatedAt ?? DateTime.Now,
+                ClosedAt: order.ClosedAt,
+                Services: order.OrderServices.Select((s, index) => new InvoiceItemDto(
+                    index + 1, s.CustomName, s.Price, s.Quantity ?? 1, s.Price * (s.Quantity ?? 1))).ToList(),
+                Parts: order.OrderParts.Select((p, index) => new InvoiceItemDto(
+                    index + 1, p.PartName, p.Price, p.Quantity, p.Price * p.Quantity)).ToList(),
+                TotalAmount: order.TotalAmount ?? 0
+            );
         }
     }
 }
