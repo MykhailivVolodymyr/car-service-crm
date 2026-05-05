@@ -70,6 +70,15 @@ namespace CarService.Api.Controllers
             return NoContent();
         }
 
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<OrderDto>>> Search([FromQuery] string term)
+        {
+            if (string.IsNullOrWhiteSpace(term)) return Ok(new List<OrderDto>());
+
+            var result = await _orderService.SearchActiveOrdersAsync(term);
+            return Ok(result);
+        }
+
         [HttpPatch("{id:int}/status/{statusId:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

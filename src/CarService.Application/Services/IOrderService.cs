@@ -14,6 +14,7 @@ namespace CarService.Application.Services
         Task<OrderDto> GetByIdAsync(int id);
         Task<IEnumerable<OrderDto>> GetByClientIdAsync(int clientId);
         Task<IEnumerable<OrderDto>> GetByVehicleIdAsync(int vehicleId);
+        Task<IEnumerable<OrderDto>> SearchActiveOrdersAsync(string searchTerm);
         Task<OrderDto> CreateAsync(CreateOrderDto dto);
         Task UpdateAsync(int id, CreateOrderDto dto);
         Task UpdateStatusAsync(int id, int statusId);

@@ -33,6 +33,7 @@ namespace CarService.Api.Extensions
             services.AddScoped<IOrderService, OrderAppService>();
             services.AddScoped<IOrderServiceService, OrderServiceService>();
             services.AddScoped<IOrderPartService, OrderPartService>();
+            services.AddScoped<IScheduleService, ScheduleService>();
 
             return services;
         }
@@ -54,6 +55,7 @@ namespace CarService.Api.Extensions
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IOrderServiceRepository, OrderServiceRepository>();
             services.AddScoped<IOrderPartRepository, OrderPartRepository>();
+            services.AddScoped<IScheduleRepository, ScheduleRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             return services;

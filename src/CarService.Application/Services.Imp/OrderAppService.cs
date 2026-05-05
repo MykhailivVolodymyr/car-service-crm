@@ -149,6 +149,25 @@ namespace CarService.Application.Services.Imp
             return _mapper.Map<IEnumerable<OrderDto>>(orders);
         }
 
+        public async Task<IEnumerable<OrderDto>> SearchActiveOrdersAsync(string searchTerm)
+        {
+            _logger.LogInformation("Searching for active orders with term: {SearchTerm}", searchTerm);
+
+            // Приводимо термін до нижнього регістру для пошуку без врахування регістру
+            var term = searchTerm.ToLower().Trim();
+
+            // Шукаємо замовлення, де статус не 5 (Закрито)
+            // І де номер авто, ім'я клієнта або телефон містять пошуковий термін
+            var orders = await _unitOfWork.Orders.GetAsync(o =>
+                o.StatusId != 5 && (
+                    o.Vehicle.LicensePlate.ToLower().Contains(term) ||
+                    o.Vehicle.Client!.FullName.ToLower().Contains(term) ||
+                    o.Vehicle.Client!.Phone.Contains(term)
+                ));
+
+            return _mapper.Map<IEnumerable<OrderDto>>(orders);
+        }
+
         public async Task UpdateAsync(int id, CreateOrderDto dto)
         {
             _logger.LogInformation("Updating Order #{OrderId} details.", id);

@@ -31,6 +31,7 @@ namespace CarService.Infrastructure.Repositories
         private IOrderRepository? _orders;
         private IOrderServiceRepository? _orderServices;
         private IOrderPartRepository? _orderParts;
+        private IScheduleRepository? _schedules;
 
         public UnitOfWork(AutoServiceDbContext context, IServiceProvider serviceProvider)
         {
@@ -53,6 +54,7 @@ namespace CarService.Infrastructure.Repositories
         public IOrderRepository Orders => _orders ??= _serviceProvider.GetRequiredService<IOrderRepository>();
         public IOrderServiceRepository OrderServices => _orderServices ??= _serviceProvider.GetRequiredService<IOrderServiceRepository>();
         public IOrderPartRepository OrderParts => _orderParts ??= _serviceProvider.GetRequiredService<IOrderPartRepository>();
+        public IScheduleRepository Schedules => _schedules ??= _serviceProvider.GetRequiredService<IScheduleRepository>();
 
 
         public async Task<int> CompleteAsync()

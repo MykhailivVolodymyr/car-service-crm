@@ -10,6 +10,8 @@ using CarService.Application.DTOs.Part.CreatePart;
 using CarService.Application.DTOs.Part.GetPart;
 using CarService.Application.DTOs.PartCategory.CreatePartCategory;
 using CarService.Application.DTOs.PartCategory.GetPartCategory;
+using CarService.Application.DTOs.Schedule.CreateSchedule;
+using CarService.Application.DTOs.Schedule.GetSchedule;
 using CarService.Application.DTOs.Service.CreateService;
 using CarService.Application.DTOs.Service.GetService;
 using CarService.Application.DTOs.Service.UpdateService;
@@ -96,6 +98,24 @@ namespace CarService.Application.Mappings
 
             CreateMap<OrderPart, OrderPartDto>()
                .ForCtorParam("TotalPrice", opt => opt.MapFrom(src => src.Price * src.Quantity));
+
+            CreateMap<CreateScheduleDto, Schedule>();
+
+            CreateMap<Schedule, ScheduleDto>()
+                .ForCtorParam("MechanicName", opt => opt.MapFrom(s => s.Mechanic.FullName))
+                .ForCtorParam("PostName", opt => opt.MapFrom(s => s.Post.Name))
+                .ForCtorParam("VehicleDisplay", opt => opt.MapFrom(s => s.Order != null
+                    ? $"{s.Order.Vehicle.Model.Brand.Name} {s.Order.Vehicle.Model.Name} ({s.Order.Vehicle.LicensePlate})"
+                    : "Бронь без авто"))
+                .ForCtorParam("ClientId", opt => opt.MapFrom(s => s.Order != null
+                    ? s.Order.Vehicle.ClientId
+                    : (int?)null))
+                .ForCtorParam("ClientName", opt => opt.MapFrom(s => s.Order != null
+                    ? s.Order.Vehicle.Client!.FullName
+                    : "Не вказано"))
+                .ForCtorParam("ClientPhone", opt => opt.MapFrom(s => s.Order != null
+                    ? s.Order.Vehicle.Client!.Phone
+                      : "Не вказано"));
         }
     }
 }
