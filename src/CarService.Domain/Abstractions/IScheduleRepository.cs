@@ -9,5 +9,6 @@ namespace CarService.Domain.Abstractions
 {
     public interface IScheduleRepository: IRepository<Schedule>
     {
+        IQueryable<Schedule> GetQueryable();
     }
 }

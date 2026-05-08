@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using CarService.Application.DTOs.Filter;
 using CarService.Application.DTOs.Schedule.CreateSchedule;
 using CarService.Application.DTOs.Schedule.GetSchedule;
 using CarService.Application.Exceptions;
+using CarService.Application.Filters.ScheduleFilters;
 using CarService.Domain.Abstractions;
 using CarService.Infrastructure;
 using Microsoft.Extensions.Logging;
@@ -17,12 +19,14 @@ namespace CarService.Application.Services.Imp
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IEnumerable<IScheduleFilterStrategy> _filters;
         private readonly ILogger<ScheduleService> _logger;
 
-        public ScheduleService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ScheduleService> logger)
+        public ScheduleService(IUnitOfWork unitOfWork, IMapper mapper, IEnumerable<IScheduleFilterStrategy> filters, ILogger<ScheduleService> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _filters = filters;
             _logger = logger;
         }
 
@@ -195,6 +199,20 @@ namespace CarService.Application.Services.Imp
             }
 
             return availableSlots;
+        }
+
+        public async Task<IEnumerable<ScheduleDto>> GetFilteredAsync(ScheduleFilterDto filterDto)
+        {
+            var query = _unitOfWork.Schedules.GetQueryable();
+
+            // Проганяємо запит через наш Pipeline
+            foreach (var filter in _filters)
+            {
+                query = filter.Apply(query, filterDto);
+            }
+
+            var result = await _unitOfWork.Schedules.ToListAsync(query);
+            return _mapper.Map<IEnumerable<ScheduleDto>>(result);
         }
     }
 }

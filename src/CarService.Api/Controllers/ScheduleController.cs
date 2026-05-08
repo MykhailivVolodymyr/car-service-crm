@@ -1,4 +1,5 @@
-﻿using CarService.Application.DTOs.Schedule.CreateSchedule;
+﻿using CarService.Application.DTOs.Filter;
+using CarService.Application.DTOs.Schedule.CreateSchedule;
 using CarService.Application.DTOs.Schedule.GetSchedule;
 using CarService.Application.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -23,6 +24,13 @@ namespace CarService.Api.Controllers
         {
             var result = await _scheduleService.GetAllAsync();
             return Ok(result);
+        }
+
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<ScheduleDto>>> GetFiltered([FromQuery] ScheduleFilterDto filterDto)
+        {
+            var schedules = await _scheduleService.GetFilteredAsync(filterDto);
+            return Ok(schedules);
         }
 
         [HttpGet("{id:int}")]

@@ -30,7 +30,7 @@ builder.Services.AddIdentityServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 builder.Services.AddRepositories();
 builder.Services.AddSwaggerAuthentication();
-
+builder.Services.AddFilters();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

@@ -1,4 +1,5 @@
-﻿using CarService.Application.DTOs.Schedule.CreateSchedule;
+﻿using CarService.Application.DTOs.Filter;
+using CarService.Application.DTOs.Schedule.CreateSchedule;
 using CarService.Application.DTOs.Schedule.GetSchedule;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,8 @@ namespace CarService.Application.Services
         Task<ScheduleDto> CreateAsync(CreateScheduleDto dto);
         Task UpdateAsync(int id, CreateScheduleDto dto);
         Task DeleteAsync(int id);
+
+        Task<IEnumerable<ScheduleDto>> GetFilteredAsync(ScheduleFilterDto filterDto);
 
         Task<IEnumerable<ScheduleDto>> GetByPeriodAsync(DateTime start, DateTime end);
         Task<IEnumerable<ScheduleDto>> GetByMechanicAsync(int mechanicId, DateTime? date = null);

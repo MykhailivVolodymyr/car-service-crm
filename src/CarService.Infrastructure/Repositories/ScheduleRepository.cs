@@ -61,5 +61,21 @@ namespace CarService.Infrastructure.Repositories
                 .Where(predicate)
                 .ToListAsync();
         }
+
+        public IQueryable<Schedule> GetQueryable()
+        {
+            return _dbSet
+                .AsNoTracking()
+                .Include(s => s.Mechanic)
+                .Include(s => s.Post)
+                .Include(s => s.Order)
+                    .ThenInclude(o => o.Vehicle)
+                        .ThenInclude(v => v.Model)
+                            .ThenInclude(m => m.Brand)
+                .Include(s => s.Order)
+                    .ThenInclude(o => o.Vehicle)
+                        .ThenInclude(v => v.Client)
+                .AsQueryable();
+        }
     }
 }

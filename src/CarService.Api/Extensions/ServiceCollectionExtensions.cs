@@ -1,4 +1,5 @@
 ﻿using CarService.Application.Configuration;
+using CarService.Application.Filters.ScheduleFilters;
 using CarService.Application.Services;
 using CarService.Application.Services.Imp;
 using CarService.Domain.Abstractions;
@@ -59,6 +60,16 @@ namespace CarService.Api.Extensions
             services.AddScoped<IOrderPartRepository, OrderPartRepository>();
             services.AddScoped<IScheduleRepository, ScheduleRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            return services;
+        }
+
+        public static IServiceCollection AddFilters(this IServiceCollection services)
+        {
+            services.AddScoped<IScheduleFilterStrategy, ScheduleDateFilter>();
+            services.AddScoped<IScheduleFilterStrategy, SchedulePostFilter>();
+            services.AddScoped<IScheduleFilterStrategy, ScheduleMechanicFilter>();
+            services.AddScoped<IScheduleFilterStrategy, ScheduleSearchFilter>();
 
             return services;
         }
