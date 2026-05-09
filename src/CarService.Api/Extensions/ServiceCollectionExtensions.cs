@@ -37,6 +37,7 @@ namespace CarService.Api.Extensions
             services.AddScoped<IScheduleService, ScheduleService>();
             services.AddScoped<IPdfService, PdfService>();
             services.AddScoped<INotificationService, EmailNotificationService>();
+            services.AddScoped<IAnalyticsService, AnalyticsService>();
 
             return services;
         }

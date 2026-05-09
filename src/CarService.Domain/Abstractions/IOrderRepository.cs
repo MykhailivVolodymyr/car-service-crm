@@ -9,5 +9,6 @@ namespace CarService.Domain.Abstractions
 {
     public interface IOrderRepository: IRepository<Order>
     {
+        IQueryable<Order> GetQueryable();
     }
 }

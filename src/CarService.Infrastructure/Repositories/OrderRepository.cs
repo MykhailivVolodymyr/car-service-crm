@@ -31,6 +31,13 @@ namespace CarService.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public IQueryable<Order> GetQueryable()
+        {
+            return ApplyIncludes(_dbSet)
+                .AsNoTracking()
+                .AsQueryable();
+        }
+
         private IQueryable<Order> ApplyIncludes(IQueryable<Order> query)
         {
             return query
@@ -41,7 +48,8 @@ namespace CarService.Infrastructure.Repositories
                     .ThenInclude(v => v.Model)
                         .ThenInclude(m => m.Brand)
                 .Include(o => o.OrderParts)
-                .Include(o => o.OrderServices);
+                .Include(o => o.OrderServices)
+                    .ThenInclude(os => os.Service);
         }
     }
 }
