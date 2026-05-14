@@ -103,5 +103,12 @@ namespace CarService.Api.Controllers
             await _scheduleService.DeleteAsync(id);
             return NoContent();
         }
+
+        [HttpGet("client/{clientId}")]
+        public async Task<ActionResult<IEnumerable<ScheduleDto>>> GetByClient(int clientId)
+        {
+            var visits = await _scheduleService.GetByClientIdAsync(clientId);
+            return Ok(visits);
+        }
     }
 }

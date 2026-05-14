@@ -83,6 +83,13 @@ namespace CarService.Api.Controllers
             var stats = await _analyticsService.GetInventoryStatsAsync();
             return Ok(stats);
         }
+
+        [HttpGet("masters-performance")]
+        public async Task<ActionResult<IEnumerable<MasterPerformanceDto>>> GetMastersPerformance([FromQuery] AnalyticsRequestDto request)
+        {
+            var stats = await _analyticsService.GetMasterPerformanceAsync(request);
+            return Ok(stats);
+        }
     }
 }
     

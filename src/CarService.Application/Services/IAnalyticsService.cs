@@ -23,6 +23,7 @@ namespace CarService.Application.Services
         Task<DashboardStatsDto> GetDashboardStatsAsync();
         Task<OperationalStatsDto> GetOperationalStatsAsync();
         Task<InventoryStatsDto> GetInventoryStatsAsync();
+        Task<IEnumerable<MasterPerformanceDto>> GetMasterPerformanceAsync(AnalyticsRequestDto request);
 
     }
 }

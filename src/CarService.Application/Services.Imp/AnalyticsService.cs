@@ -285,6 +285,48 @@ namespace CarService.Application.Services.Imp
             );
         }
 
+        public async Task<IEnumerable<MasterPerformanceDto>> GetMasterPerformanceAsync(AnalyticsRequestDto request)
+        {
+            var (startDate, endDate) = DefinePeriod(request);
+
+            var query = _unitOfWork.Schedules.GetQueryable()
+                .Where(s => s.StartTime >= startDate && s.StartTime <= endDate);
+
+            var schedules = await _unitOfWork.Schedules.ToListAsync(query);
+
+            var result = schedules
+                .GroupBy(s => new { s.MechanicId, s.Mechanic.FullName })
+                .Select(g =>
+                {
+                    var masterSchedules = g.ToList();
+
+                    // незалежно від того, чи однаковий у них OrderId, чи його взагалі немає.
+                    int appointmentsCount = masterSchedules.Count;
+
+                    decimal totalRevenue = masterSchedules
+                        .Where(s => s.Order != null)
+                        .GroupBy(s => s.OrderId)
+                        .Select(group => group.First().Order!.TotalAmount ?? 0)
+                        .Sum();
+
+                    double totalWorkHours = masterSchedules
+                        .Sum(s => (s.EndTime - s.StartTime).TotalHours);
+
+                    return new MasterPerformanceDto(
+                        MasterId: g.Key.MechanicId,
+                        MasterName: g.Key.FullName,
+                        OrdersCount: appointmentsCount, // Тепер це фактично кількість візитів/записів
+                        TotalRevenue: totalRevenue,
+                        AverageOrderValue: appointmentsCount > 0 ? totalRevenue / appointmentsCount : 0,
+                        TotalWorkHours: Math.Round(totalWorkHours, 1)
+                    );
+                })
+                .OrderByDescending(p => p.TotalRevenue)
+                .ToList();
+
+            return result;
+        }
+
         private string TranslateDay(DayOfWeek day)
         {
             return day switch

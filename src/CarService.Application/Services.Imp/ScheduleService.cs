@@ -214,5 +214,19 @@ namespace CarService.Application.Services.Imp
             var result = await _unitOfWork.Schedules.ToListAsync(query);
             return _mapper.Map<IEnumerable<ScheduleDto>>(result);
         }
+
+        public async Task<IEnumerable<ScheduleDto>> GetByClientIdAsync(int clientId)
+        {
+            _logger.LogInformation("Fetching all visit history for Client #{ClientId}", clientId);
+
+            var items = await _unitOfWork.Schedules.GetAsync(s =>
+                s.Order != null &&
+                s.Order.Vehicle != null &&
+                s.Order.Vehicle.ClientId == clientId);
+
+            var sortedItems = items.OrderByDescending(s => s.StartTime);
+
+            return _mapper.Map<IEnumerable<ScheduleDto>>(sortedItems);
+        }
     }
 }

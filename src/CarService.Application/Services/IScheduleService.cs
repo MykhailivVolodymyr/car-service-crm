@@ -25,5 +25,7 @@ namespace CarService.Application.Services
         Task<IEnumerable<AvailableSlotDto>> GetAvailableSlotsAsync(DateTime date, int? postId = null);
         Task LinkOrderAsync(int scheduleId, int orderId);
         Task<bool> IsSlotAvailableAsync(int postId, int mechanicId, DateTime start, DateTime end, int? excludeScheduleId = null);
+
+        Task<IEnumerable<ScheduleDto>> GetByClientIdAsync(int clientId);
     }
 }
