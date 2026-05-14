@@ -1,4 +1,7 @@
 ﻿using CarService.Application.DTOs.Analytics;
+using CarService.Application.DTOs.Analytics.InventoryPage;
+using CarService.Application.DTOs.Analytics.MainPaige;
+using CarService.Application.DTOs.Analytics.MasterPage;
 using CarService.Domain.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -207,6 +210,79 @@ namespace CarService.Application.Services.Imp
             });
 
             return result;
+        }
+
+        // main paige
+        public async Task<DashboardStatsDto> GetDashboardStatsAsync()
+        {
+            var now = DateTime.Now;
+            var todayStart = now.Date;
+            var weekStart = now.AddDays(-7).Date;
+            var monthStart = now.AddMonths(-1).Date;
+
+            var todayQuery = _unitOfWork.Schedules.GetQueryable()
+                .Where(s => s.StartTime >= todayStart && s.StartTime < todayStart.AddDays(1));
+
+            var weekQuery = _unitOfWork.Schedules.GetQueryable()
+                .Where(s => s.StartTime >= weekStart);
+
+            var monthQuery = _unitOfWork.Schedules.GetQueryable()
+                .Where(s => s.StartTime >= monthStart);
+
+            int appointmentsToday = await _unitOfWork.Schedules.CountAsync(todayQuery);
+            int appointmentsThisWeek = await _unitOfWork.Schedules.CountAsync(weekQuery);
+            int appointmentsThisMonth = await _unitOfWork.Schedules.CountAsync(monthQuery);
+
+            var allClients = await _unitOfWork.Clients.GetAllAsync();
+            int totalClients = allClients.Count();
+
+            return new DashboardStatsDto(
+                appointmentsToday,
+                appointmentsThisWeek,
+                appointmentsThisMonth,
+                totalClients
+            );
+        }
+
+        public async Task<OperationalStatsDto> GetOperationalStatsAsync()
+        {
+            // Отримуємо всіх користувачів
+            var allUsers = await _unitOfWork.Users.GetAllAsync();
+
+            // Майстри (Role 2)
+            var masters = allUsers.Where(u => u.RoleId == 2).ToList();
+            int totalMasters = masters.Count;
+
+            // Активні майстри (IsActive може бути null, тому перевіряємо на true)
+            int activeMasters = masters.Count(u => u.IsActive == true);
+
+            // Послуги
+            var allServices = await _unitOfWork.Services.GetAllAsync();
+            int totalServices = allServices.Count();
+
+            return new OperationalStatsDto(
+                totalMasters,
+                totalServices,
+                activeMasters
+            );
+        }
+
+        public async Task<InventoryStatsDto> GetInventoryStatsAsync()
+        {
+            var allParts = await _unitOfWork.Parts.GetAllAsync();
+
+            int totalPositions = allParts.Count();
+
+            // Рахуємо як: (Закупівельна ціна * Поточна кількість) для кожної позиції
+            decimal totalInventoryValue = allParts.Sum(p => (p.PurchasePrice * (p.Quantity ?? 0)));
+
+            int lowStockCount = allParts.Count(p => (p.Quantity ?? 0) < 5);
+
+            return new InventoryStatsDto(
+                totalPositions,
+                totalInventoryValue,
+                lowStockCount
+            );
         }
 
         private string TranslateDay(DayOfWeek day)

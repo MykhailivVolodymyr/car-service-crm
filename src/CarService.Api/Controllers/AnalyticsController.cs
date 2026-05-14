@@ -1,11 +1,16 @@
 ﻿using CarService.Application.DTOs.Analytics;
+using CarService.Application.DTOs.Analytics.InventoryPage;
+using CarService.Application.DTOs.Analytics.MainPaige;
+using CarService.Application.DTOs.Analytics.MasterPage;
 using CarService.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarService.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class AnalyticsController : ControllerBase
     {
         private readonly IAnalyticsService _analyticsService;
@@ -55,6 +60,28 @@ namespace CarService.Api.Controllers
         {
             var load = await _analyticsService.GetHourlyLoadAsync(request);
             return Ok(load);
+        }
+
+        // main paige
+        [HttpGet("dashboard-stats")]
+        public async Task<ActionResult<DashboardStatsDto>> GetDashboardStats()
+        {
+            var stats = await _analyticsService.GetDashboardStatsAsync();
+            return Ok(stats);
+        }
+
+        [HttpGet("operational-stats")]
+        public async Task<ActionResult<OperationalStatsDto>> GetOperationalStats()
+        {
+            var stats = await _analyticsService.GetOperationalStatsAsync();
+            return Ok(stats);
+        }
+
+        [HttpGet("inventory-stats")]
+        public async Task<ActionResult<InventoryStatsDto>> GetInventoryStats()
+        {
+            var stats = await _analyticsService.GetInventoryStatsAsync();
+            return Ok(stats);
         }
     }
 }

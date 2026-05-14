@@ -1,4 +1,7 @@
 ﻿using CarService.Application.DTOs.Analytics;
+using CarService.Application.DTOs.Analytics.InventoryPage;
+using CarService.Application.DTOs.Analytics.MainPaige;
+using CarService.Application.DTOs.Analytics.MasterPage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +18,11 @@ namespace CarService.Application.Services
         Task<IEnumerable<ServicePopularityDto>> GetTopServicesAsync(AnalyticsRequestDto request);
         Task<IEnumerable<DailyActivityDto>> GetDailyActivityAsync(AnalyticsRequestDto request);
         Task<IEnumerable<HourlyLoadDto>> GetHourlyLoadAsync(AnalyticsRequestDto request);
+
+        // main paige
+        Task<DashboardStatsDto> GetDashboardStatsAsync();
+        Task<OperationalStatsDto> GetOperationalStatsAsync();
+        Task<InventoryStatsDto> GetInventoryStatsAsync();
 
     }
 }
