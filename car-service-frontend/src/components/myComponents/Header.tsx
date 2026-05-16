@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import SidebarContent from "./SidebarContent";
+import WeeklyCalendarStrip from "@/features/mainPage/components/WeeklyCalendarStrip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +25,7 @@ export default function Header() {
   const [user, setUser] = useState<{ fullName: string; role: string } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false); // 1. Фікс блимання: стейт завантаження клієнта
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const isAuthPage = pathname === "/login" || pathname === "/register";
 
@@ -33,7 +34,7 @@ export default function Header() {
     if (savedUser) {
       setUser(savedUser);
     }
-    setIsLoaded(true); // 2. Кажемо, що клієнт готовий і дані зчитано
+    setIsLoaded(true);
 
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -57,63 +58,71 @@ export default function Header() {
   };
 
   return (
-    <header className="h-16 w-full border-b bg-white px-4 md:px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-      {/* Мобільний бургер (для малих екранів) */}
-      <div className="flex items-center lg:hidden">
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-slate-600 cursor-pointer">
-              <Menu size={22} />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0 !w-[230px] !max-w-[230px] border-r-0">
-            <SidebarContent onItemClick={() => setIsOpen(false)} />
-          </SheetContent>
-        </Sheet>
+    <header className="h-16 w-full border-b bg-white px-4 md:px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm font-sans antialiased">
+      
+      {/* ЛІВА ЧАСТИНА: Бургер + Календар (Групуються разом зліва) */}
+      <div className="flex items-center gap-3">
+        {/* Мобільний бургер */}
+        <div className="flex items-center lg:hidden">
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-slate-600 cursor-pointer">
+                <Menu size={22} />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 !w-[230px] !max-w-[230px] border-r-0">
+              <SidebarContent onItemClick={() => setIsOpen(false)} />
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Стрічка тижня: чітко зафіксована зліва */}
+        <div className="hidden sm:block shrink-0">
+          <WeeklyCalendarStrip />
+        </div>
       </div>
 
-      {/* Права частина: час, дата та дропдаун профілю */}
-      <div className="flex items-center gap-4 md:gap-8 ml-auto">
+      {/* ПРАВА ЧАСТИНА: Відштовхнута за допомогою ml-auto і має акуратні внутрішні відступи */}
+      <div className="flex items-center gap-4 md:gap-5 ml-auto shrink-0">
         
-        {/* Адаптивний блок часу та дати */}
-        <div className="flex items-center gap-3 md:gap-6 text-slate-600">
+        {/* Час та Дата */}
+        <div className="flex items-center gap-4 text-slate-600">
           {/* Годинник */}
           <div className="flex items-center gap-2 font-medium">
             <Clock size={18} className="text-blue-500 shrink-0" />
-            <span className="text-xs md:text-sm tabular-nums">
-              {format(currentTime, "HH:mm:ss")}
+            <span className="text-xs md:text-sm tabular-nums min-w-[50px]">
+              {isLoaded ? format(currentTime, "HH:mm") : "--:--"}
             </span>
           </div>
 
           {/* Дата */}
-          <div className="hidden md:flex items-center gap-2 font-medium border-l pl-6">
+          <div className="hidden md:flex items-center gap-2 font-medium border-l border-slate-100 pl-4">
             <CalendarIcon size={18} className="text-blue-500 shrink-0" />
-            <span className="text-sm">
+            <span className="text-sm text-slate-700 font-semibold">
               {format(currentTime, "dd.MM.yyyy")}
             </span>
           </div>
         </div>
 
         {/* Профіль користувача */}
-        <div className="border-l pl-4 md:pl-8">
+        <div className="border-l border-slate-100 pl-4">
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 md:gap-3 outline-none cursor-pointer group select-none">
-              {/* 3. Показуємо інфо лише після завантаження клієнта (запобігає рендеру дефолту на сервері) */}
               <div className="hidden md:flex flex-col items-end transition group-hover:opacity-80 min-h-[32px] justify-center">
                 {isLoaded && (
                   <>
                     <span className="text-sm font-bold text-slate-900 leading-none">
                       {user?.fullName || "Користувач"}
                     </span>
-                    <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold mt-1">
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mt-1">
                       {user?.role === "Менеджер" ? "Менеджер" : "Майстер"}
                     </span>
                   </>
                 )}
               </div>
               
-              <Avatar className="h-9 w-9 md:h-10 md:w-10 ring-2 ring-slate-100 group-hover:ring-blue-100 transition shadow-sm">
-                <AvatarFallback className="bg-slate-100 text-blue-600 font-semibold text-xs md:text-sm">
+              <Avatar className="h-9 w-9 ring-2 ring-slate-50 group-hover:ring-blue-100 transition shadow-sm">
+                <AvatarFallback className="bg-slate-50 text-blue-600 font-bold text-xs">
                   {isLoaded ? getInitials(user?.fullName) : ""}
                 </AvatarFallback>
               </Avatar>
