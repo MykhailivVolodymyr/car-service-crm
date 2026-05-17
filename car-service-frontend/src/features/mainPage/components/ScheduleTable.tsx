@@ -1,9 +1,11 @@
 "use client";
 
 import { ScheduleDto } from "../types/Schedule";
-import { Clock, Car, Phone, User, Wrench, Edit2, Trash2, FileText } from "lucide-react";
+import { Clock, Car, Phone, User, Wrench, Edit2, Trash2 } from "lucide-react"; 
 import { format, differenceInMinutes, isBefore } from "date-fns";
 import { uk } from "date-fns/locale";
+import { useRouter } from "next/navigation"; // Імпорт роутера для навігації
+import { Button } from "@/components/ui/button"; 
 import {
   Tooltip,
   TooltipContent,
@@ -15,12 +17,12 @@ interface ScheduleTableProps {
   schedules: ScheduleDto[];
   loading: boolean;
   onEditClick: (id: number) => void;
-  onDeleteClick: (id: number) => void; // ДОДАНО: проп для видалення
+  onDeleteClick: (id: number) => void;
 }
 
 export default function ScheduleTable({ schedules, loading, onEditClick, onDeleteClick }: ScheduleTableProps) {
+  const router = useRouter(); 
 
-  // Допоміжна функція для парсингу дати як локальної
   const parseAsLocalDateTime = (dateStr: string) => {
     if (dateStr && dateStr.includes("T")) {
       const cleanStr = dateStr.split(".")[0].replace("Z", "");
@@ -29,7 +31,6 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
     return new Date(dateStr);
   };
 
-  // Розрахунок залишку часу з підтримкою статусу "Пройшло"
   const getRemainingTimeStatus = (startTimeStr: string) => {
     const now = new Date();
     const start = parseAsLocalDateTime(startTimeStr);
@@ -46,20 +47,17 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
     return { text, isPast: false };
   };
 
-  // Форматування діапазону часу
   const formatTimeRange = (startStr: string, endStr: string) => {
     const start = parseAsLocalDateTime(startStr);
     const end = parseAsLocalDateTime(endStr);
     return `${format(start, "HH:mm")} - ${format(end, "HH:mm")}`;
   };
 
-  // Форматування дати
   const formatDateLabel = (startStr: string) => {
     const start = parseAsLocalDateTime(startStr);
     return format(start, "dd MMMM", { locale: uk });
   };
 
-  // ЛОГІКА СОРТУВАННЯ: Майбутні записи -> вгорі від найближчого, Минулі -> опускаються вниз
   const getSortedSchedules = () => {
     const now = new Date();
     
@@ -79,11 +77,18 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
 
   const sortedItems = getSortedSchedules();
 
+  // ОНОВЛЕНО: Функція перевірки та переходу за orderId
+  const handleRowClick = (orderId: number | null) => {
+    if (orderId !== null && orderId !== undefined) {
+      router.push(`/orders/${orderId}`);
+    }
+  };
+
   return (
     <TooltipProvider delayDuration={200}>
       <div className="w-full font-sans antialiased select-none">
         
-        {/* 1. ДЕСКТОПНА ВЕРСІЯ */}
+        {/* 1. ДЕСКТОПНА ВЕРСІЯ ТАБЛИЦІ */}
         <div className="hidden md:block w-full bg-white border border-slate-100 rounded-2xl shadow-sm overflow-x-auto">
           <table className="w-full border-collapse text-left table-auto min-w-[950px]">
             <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
@@ -95,7 +100,7 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
                 <th className="px-4 py-3.5 font-semibold tracking-wide">Майстер</th>
                 <th className="px-4 py-3.5 font-semibold tracking-wide">Опис проблеми</th>
                 <th className="px-4 py-3.5 font-semibold tracking-wide whitespace-nowrap">Залишилось</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide text-center w-44">Дії</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide text-center w-36">Дії</th>
               </tr>
             </thead>
 
@@ -117,11 +122,19 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
               ) : (
                 sortedItems.map((item) => {
                   const status = getRemainingTimeStatus(item.startTime);
+                  const hasOrder = item.orderId !== null;
 
                   return (
-                    <tr key={item.id} className="bg-slate-50/60 hover:bg-[#F8FAFC] transition-colors duration-200">
+                    /* ОНОВЛЕНО: Передаємо item.orderId і підсвічуємо рядок ховером або pointer тільки якщо є замовлення */
+                    <tr 
+                      key={item.id} 
+                      onClick={() => handleRowClick(item.orderId)}
+                      className={`bg-slate-50/60 border-b border-slate-100/60 transition-colors duration-200 group ${
+                        hasOrder ? "cursor-pointer hover:bg-slate-100/70" : "cursor-default hover:bg-slate-50/20"
+                      }`}
+                    >
                       <td className="px-4 py-3.5 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 font-bold text-sm text-slate-900">
+                        <div className={`flex items-center gap-1.5 font-bold text-sm text-slate-900 transition-colors ${hasOrder && "group-hover:text-blue-600"}`}>
                           <Clock size={14} className="text-blue-500 shrink-0" />
                           {formatTimeRange(item.startTime, item.endTime)}
                         </div>
@@ -134,6 +147,8 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
                         <div className="flex items-center gap-1.5">
                           <Car size={14} className="text-slate-400 shrink-0" />
                           <span>{item.vehicleDisplay || "—"}</span>
+                          {/* Маленький бейдж для візуального UX, щоб менеджер бачив, чи є вже відкритий наряд */}
+                          {hasOrder && <span className="text-[9px] bg-blue-50 text-blue-600 border border-blue-100 px-1 rounded font-normal scale-90">Наряд</span>}
                         </div>
                       </td>
 
@@ -173,7 +188,7 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
                         </span>
                       </td>
 
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1.5">
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -195,16 +210,6 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
 
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <button className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl transition border border-emerald-100/60 cursor-pointer">
-                                <FileText size={13} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-slate-900 text-white font-semibold text-xs rounded-lg px-2.5 py-1"><p>Замовлення-наряд</p></TooltipContent>
-                          </Tooltip>
-
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              {/* ОНОВЛЕНО: Повісили функцію onDeleteClick на червоний смітник */}
                               <button onClick={() => onDeleteClick(item.id)} className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition border border-rose-100/60 cursor-pointer">
                                 <Trash2 size={13} />
                               </button>
@@ -221,7 +226,7 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
           </table>
         </div>
 
-        {/* 2. МОБІЛЬНА ВЕРСІЯ */}
+        {/* 2. МОБІЛЬНА ВЕРСІЯ ТАБЛИЦІ */}
         <div className="block md:hidden w-full space-y-3">
           {loading ? (
             Array.from({ length: 2 }).map((_, idx) => (
@@ -238,14 +243,23 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
           ) : (
             sortedItems.map((item) => {
               const status = getRemainingTimeStatus(item.startTime);
+              const hasOrder = item.orderId !== null;
 
               return (
-                <div key={item.id} className="w-full bg-white border border-slate-100 rounded-2xl p-4 shadow-sm space-y-3.5 bg-slate-50/40">
+                /* ОНОВЛЕНО: Мобільна картка реагує на клік тільки якщо є orderId */
+                <div 
+                  key={item.id} 
+                  onClick={() => handleRowClick(item.orderId)}
+                  className={`w-full bg-white border border-slate-100 rounded-2xl p-4 shadow-sm space-y-3.5 transition ${
+                    hasOrder ? "cursor-pointer bg-slate-50/40 hover:border-slate-200" : "cursor-default bg-white"
+                  }`}
+                >
                   <div className="flex items-center justify-between border-b border-slate-100/80 pb-2.5">
                     <div className="flex flex-col">
                       <div className="flex items-center gap-1.5 font-bold text-sm text-slate-900">
                         <Clock size={14} className="text-blue-500" />
                         <span>{formatTimeRange(item.startTime, item.endTime)}</span>
+                        {hasOrder && <span className="text-[8px] bg-blue-50 text-blue-600 border border-blue-100 px-1 rounded font-normal ml-1">Наряд</span>}
                       </div>
                       <span className="text-[11px] text-slate-400 font-medium mt-0.5 capitalize">{formatDateLabel(item.startTime)}</span>
                     </div>
@@ -296,11 +310,9 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 pt-1">
+                  <div className="grid grid-cols-3 gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => onEditClick(item.id)} className="flex justify-center py-2 bg-amber-50 active:bg-amber-100 text-amber-600 rounded-xl border border-amber-100/60 cursor-pointer"><Edit2 size={14} /></button>
                     <button className="flex justify-center py-2 bg-sky-50 active:bg-sky-100 text-sky-600 rounded-xl border border-sky-100/60 cursor-pointer"><User size={14} /></button>
-                    <button className="flex justify-center py-2 bg-emerald-50 active:bg-emerald-100 text-emerald-600 rounded-xl border border-emerald-100/60 cursor-pointer"><FileText size={14} /></button>
-                    {/* ОНОВЛЕНО: Повісили функцію onDeleteClick на мобільну кнопку */}
                     <button onClick={() => onDeleteClick(item.id)} className="flex justify-center py-2 bg-rose-50 active:bg-rose-100 text-rose-600 rounded-xl border border-rose-100/60 cursor-pointer"><Trash2 size={14} /></button>
                   </div>
                 </div>

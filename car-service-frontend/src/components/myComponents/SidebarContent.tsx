@@ -6,7 +6,7 @@ import {
   Wrench, Wallet, Package, 
   BarChart3, Settings, Brain, 
   CreditCard, MessageSquare, ExternalLink, 
-  LifeBuoy, Car 
+  LifeBuoy, Car, ClipboardList
 } from "lucide-react";
 
 const menuGroups = [
@@ -14,7 +14,7 @@ const menuGroups = [
     title: "Записи",
     items: [
       { name: "Головна", icon: LayoutDashboard, href: "/" },
-      { name: "Додати запис", icon: PlusCircle, href: "#" },
+      { name: "Замовлення", icon: ClipboardList, href: "/orders" },
       { name: "Знайти клієнта", icon: Search, href: "#" },
     ],
   },

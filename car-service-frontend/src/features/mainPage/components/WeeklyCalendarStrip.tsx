@@ -63,14 +63,15 @@ export default function WeeklyCalendarStrip() {
     loadWeeklyCounts();
   }, [searchParams]);
 
-  const handleDateClick = (dateStr: string | undefined) => {
+ const handleDateClick = (dateStr: string | undefined) => {
     const params = new URLSearchParams(searchParams.toString());
     if (dateStr) {
       params.set("date", dateStr);
     } else {
       params.delete("date");
     }
-    router.push(`${pathname}?${params.toString()}`);
+    
+    router.push(`/?${params.toString()}`);
   };
 
   const getDayBgColor = (count: number, isSelected: boolean) => {
