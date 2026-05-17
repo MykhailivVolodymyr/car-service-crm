@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { mainPageService } from "../services/mainPageService";
+import { orderService } from "@/features/orders/services/orderService"; 
 import { MasterUserDto, WorkPostDto } from "../types/Schedule";
-import { Search, Plus, Calendar, Clock, Wrench, LayoutGrid, Car, AlertCircle } from "lucide-react";
+import { Search, Plus, Calendar, Clock, Wrench, LayoutGrid, Car, AlertCircle, User, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface CreateScheduleModalProps {
   isOpen: boolean;
@@ -13,7 +15,7 @@ interface CreateScheduleModalProps {
   onSuccess: () => void;
   posts: WorkPostDto[];
   masters: MasterUserDto[];
-  scheduleId?: number | null; // Якщо передано ID — працюємо в режимі редагування
+  scheduleId?: number | null;
 }
 
 export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts, masters, scheduleId }: CreateScheduleModalProps) {
@@ -29,21 +31,41 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
 
   // Режим прив'язки замовлення: 'none' | 'existing' | 'new'
   const [orderMode, setOrderMode] = useState<'none' | 'existing' | 'new'>('none');
-
-  // Фіксація, чи прийшло замовлення з бекенду при редагуванні (щоб блокувати вкладку "Нове")
   const [hasInitialOrder, setHasInitialOrder] = useState<boolean>(false);
 
-  // Стейт для ПОШУКУ існуючого замовлення
+  // Стейт для ПОШУКУ існуючого ЗАМОВЛЕННЯ
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
-  // Стейт для СТВОРЕННЯ НОВОГО замовлення (CreateOrderDto)
+  // ==================================================
+  // СТВОРЕННЯ НОВОГО ЗАМОВЛЕННЯ (Гнучкі автокомпліти)
+  // ==================================================
+  
+  // Клієнт
+  const [clientMode, setClientMode] = useState<'search' | 'create'>('search');
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
+  const [selectedClient, setSelectedClient] = useState<any | null>(null);
+
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [clientEmail, setClientEmail] = useState(""); 
-  const [brandName, setBrandName] = useState("");
-  const [modelName, setModelName] = useState("");
+
+  // Автомобіль
+  const [vehicleMode, setVehicleMode] = useState<'search' | 'create'>('search');
+  const [vehicleSearchTerm, setVehicleSearchTerm] = useState("");
+  const [vehicleSearchResults, setVehicleSearchResults] = useState<any[]>([]);
+  const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
+
+  // Кастомні автокомпліти для нових Брендів та Моделей
+  const [brandSearchTerm, setBrandSearchTerm] = useState("");
+  const [brandSearchResults, setBrandSearchResults] = useState<any[]>([]);
+
+  const [modelSearchTerm, setModelSearchTerm] = useState("");
+  const [modelSearchResults, setModelSearchResults] = useState<any[]>([]);
+
+  // Інші поля авто
   const [licensePlate, setLicensePlate] = useState("");
   const [vin, setVin] = useState("");             
   const [year, setYear] = useState("");           
@@ -52,7 +74,7 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
-  // ЕФЕКТ ДЛЯ РЕДАГУВАННЯ: Завантажуємо дані існуючого запису з бекенду при відкритті
+  // Редагування: завантаження первинних даних розкладу
   useEffect(() => {
     if (isOpen && scheduleId) {
       const loadScheduleData = async () => {
@@ -63,7 +85,6 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
           setMechanicId(data.mechanicId.toString());
           setDescription(data.description || "");
           
-          // Розбиваємо ISO рядок "2026-05-17T10:00:00" на дату та час для інпутів
           if (data.startTime) {
             const parts = data.startTime.split("T");
             setDate(parts[0]);
@@ -73,10 +94,9 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
             setEndTime(data.endTime.split("T")[1].substring(0, 5));
           }
 
-          // Перевіряємо наявність замовлення у відповіді бекенду
           if (data.orderId) {
             setOrderMode('existing');
-            setHasInitialOrder(true); // Запам'ятовуємо, що замовлення вже прив'язане
+            setHasInitialOrder(true);
             setSelectedOrder({
               id: data.orderId,
               vehicleDetails: data.vehicleDisplay || "Автомобіль замовлення",
@@ -85,7 +105,7 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
             });
           } else {
             setOrderMode('none');
-            setHasInitialOrder(false); // Це бронь без авто, вкладка "Нове" має бути доступною
+            setHasInitialOrder(false);
             setSelectedOrder(null);
           }
         } catch (err) {
@@ -94,42 +114,116 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
       };
       loadScheduleData();
     } else if (isOpen && !scheduleId) {
-      handleReset(); // Якщо додавання нового — очищаємо форму
+      handleReset();
     }
   }, [isOpen, scheduleId]);
 
-  // Дебаунс пошуку активних замовлень
+  // 1. Дебаунс для пошуку існуючого замовлення
   useEffect(() => {
     if (orderMode !== 'existing' || !searchTerm.trim()) {
       setSearchResults([]);
       return;
     }
-
-    const delayDebounceFn = setTimeout(() => {
-      const searchOrders = async () => {
-        try {
-          const results = await mainPageService.searchActiveOrders(searchTerm);
-          setSearchResults(results);
-        } catch (err) {
-          console.error("Помилка пошуку замовлень:", err);
-        }
-      };
-      searchOrders();
+    const delay = setTimeout(() => {
+      mainPageService.searchActiveOrders(searchTerm)
+        .then(res => setSearchResults(res))
+        .catch(err => console.error(err));
     }, 400);
-
-    return () => clearTimeout(delayDebounceFn);
+    
+    return () => { clearTimeout(delay); };
   }, [searchTerm, orderMode]);
 
-  // Хелпер для виведення помилок FluentValidation
+  // 2. Дебаунс для пошуку клієнта
+  useEffect(() => {
+    if (orderMode !== 'new' || clientMode !== 'search' || !clientSearchTerm.trim()) {
+      setClientSearchResults([]);
+      return;
+    }
+    const delay = setTimeout(() => {
+      orderService.searchClients(clientSearchTerm)
+        .then(res => setClientSearchResults(res))
+        .catch(err => console.error(err));
+    }, 400);
+    
+    return () => { clearTimeout(delay); };
+  }, [clientSearchTerm, clientMode, orderMode]);
+
+  // 3. ОНОВЛЕНО: Дебаунс пошуку авто з фільтрацією строго за обраним клієнтом на фронті
+  useEffect(() => {
+    if (orderMode !== 'new' || vehicleMode !== 'search') {
+      setVehicleSearchResults([]);
+      return;
+    }
+    if (!vehicleSearchTerm.trim() && !selectedClient) {
+      setVehicleSearchResults([]);
+      return;
+    }
+
+    const delay = setTimeout(() => {
+      orderService.searchVehicles(vehicleSearchTerm)
+        .then(res => {
+          // Якщо обрано існуючого клієнта — фільтруємо масив, залишаючи тільки його ТЗ
+          if (selectedClient) {
+            const filtered = res.filter((v: any) => v.clientId === selectedClient.id);
+            setVehicleSearchResults(filtered);
+          } else {
+            setVehicleSearchResults(res);
+          }
+        })
+        .catch(err => console.error(err));
+    }, 400);
+    
+    return () => { clearTimeout(delay); };
+  }, [vehicleSearchTerm, vehicleMode, orderMode, selectedClient]);
+
+  // 4. Дебаунс для пошуку БРЕНДІВ
+  useEffect(() => {
+    if (orderMode !== 'new' || vehicleMode !== 'create' || !brandSearchTerm.trim()) {
+      setBrandSearchResults([]);
+      return;
+    }
+    const delay = setTimeout(() => {
+      orderService.searchBrands(brandSearchTerm)
+        .then(res => setBrandSearchResults(res))
+        .catch(err => console.error(err));
+    }, 350);
+    
+    return () => { clearTimeout(delay); };
+  }, [brandSearchTerm, vehicleMode, orderMode]);
+
+  // 5. ОНОВЛЕНО: Дебаунс пошуку МОДЕЛЕЙ з фільтрацією на фронті за введеною маркою
+  useEffect(() => {
+    if (orderMode !== 'new' || vehicleMode !== 'create' || !modelSearchTerm.trim()) {
+      setModelSearchResults([]);
+      return;
+    }
+    const delay = setTimeout(() => {
+      orderService.searchModels(modelSearchTerm)
+        .then(res => {
+          // Якщо в полі "Марка (Бренд)" є текст — залишаємо моделі тільки цієї марки
+          if (brandSearchTerm.trim()) {
+            const filtered = res.filter((m: any) => 
+              m.brandName?.toLowerCase() === brandSearchTerm.toLowerCase() ||
+              m.vehicleBrandName?.toLowerCase() === brandSearchTerm.toLowerCase()
+            );
+            setModelSearchResults(filtered);
+          } else {
+            setModelSearchResults(res);
+          }
+        })
+        .catch(err => console.error(err));
+    }, 350);
+    
+    return () => { clearTimeout(delay); };
+  }, [modelSearchTerm, brandSearchTerm, vehicleMode, orderMode]);
+
+
   const getFieldError = (fieldName: string): string | null => {
     const key = Object.keys(errors).find(k => k.toLowerCase() === fieldName.toLowerCase());
-    if (key && errors[key] && errors[key].length > 0) {
-      return errors[key][0];
-    }
-    return null;
+    return key && errors[key]?.length > 0 ? errors[key][0] : null;
   };
 
-  // Сабміт форми (POST або PUT)
+  // САБМІТ ФОРМИ
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({}); 
@@ -146,16 +240,22 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
       if (orderMode === 'new') {
         const newOrderData = {
           statusId: 1, 
-          brandName,
-          modelName,
-          licensePlate,
-          vin, 
-          year: year ? Number(year) : null, 
-          clientFullName: clientName,
-          clientPhone,
-          clientEmail, 
-          notes
+          notes,
+          
+          clientId: clientMode === 'search' && selectedClient ? selectedClient.id : null,
+          vehicleId: vehicleMode === 'search' && selectedVehicle ? selectedVehicle.id : null,
+
+          clientFullName: clientMode === 'create' ? clientName : null,
+          clientPhone: clientMode === 'create' ? clientPhone : null,
+          clientEmail: clientMode === 'create' ? clientEmail : null, 
+          
+          brandName: vehicleMode === 'create' ? brandSearchTerm : null,
+          modelName: vehicleMode === 'create' ? modelSearchTerm : null,
+          licensePlate: vehicleMode === 'create' ? licensePlate : null,
+          vin: vehicleMode === 'create' ? vin : null, 
+          year: vehicleMode === 'create' && year ? Number(year) : null, 
         };
+
         const createdOrder = await mainPageService.createOrder(newOrderData);
         finalOrderId = createdOrder.id;
       } 
@@ -201,8 +301,14 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
   const handleReset = () => {
     setPostId(""); setMechanicId(""); setDate(""); setStartTime(""); setEndTime(""); setDescription("");
     setOrderMode('none'); setHasInitialOrder(false); setSearchTerm(""); setSelectedOrder(null);
+    
+    setClientMode('search'); setClientSearchTerm(""); setClientSearchResults([]); setSelectedClient(null);
     setClientName(""); setClientPhone(""); setClientEmail(""); 
-    setBrandName(""); setModelName(""); setLicensePlate(""); setVin(""); setYear(""); setNotes("");
+    
+    setVehicleMode('search'); setVehicleSearchTerm(""); setVehicleSearchResults([]); setSelectedVehicle(null);
+    setBrandSearchTerm(""); setBrandSearchResults([]); 
+    setModelSearchTerm(""); setModelSearchResults([]); 
+    setLicensePlate(""); setVin(""); setYear(""); setNotes("");
     setErrors({});
   };
 
@@ -228,7 +334,7 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
           {/* БЛОК 1: ОСНОВНІ ПАРАМЕТРИ РОЗКЛАДУ */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-slate-400 uppercase tracking-wider text-[10px] mb-1">Пост / Бокс</label>
+              <label className="block text-slate-400 uppercase tracking-wider text-[10px] mb-1">Post / Бокс</label>
               <div className="relative">
                 <LayoutGrid className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
                 <select value={postId} onChange={(e) => setPostId(e.target.value)} className="w-full pl-9 pr-3 h-10 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 bg-slate-50/40 cursor-pointer text-slate-700 font-medium">
@@ -236,9 +342,6 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
                   {posts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
-              <button type="button" className="mt-1 text-[10px] text-slate-400 font-medium hover:text-blue-600 transition pl-1 cursor-pointer">
-                + Створити бокс
-              </button>
             </div>
 
             <div className="sm:col-span-2">
@@ -250,9 +353,6 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
                   {masters.map(m => <option key={m.id} value={m.id}>{m.fullName}</option>)}
                 </select>
               </div>
-              <button type="button" className="mt-1 text-[10px] text-slate-400 font-medium hover:text-blue-600 transition pl-1 cursor-pointer">
-                + Створити майстра
-              </button>
             </div>
           </div>
 
@@ -291,13 +391,12 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
             
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={() => { setOrderMode('none'); setSelectedOrder(null); }} className={`h-9 px-3.5 rounded-xl text-xs font-bold border ${orderMode === 'none' ? 'bg-slate-100 text-slate-800 border-slate-300' : 'bg-white text-slate-500 border-slate-200/80 hover:bg-slate-50'}`}>
-                Без замовлення
+                Без замовлення (Бронювання)
               </Button>
               <Button type="button" variant="outline" onClick={() => setOrderMode('existing')} className={`h-9 px-3.5 rounded-xl text-xs font-bold gap-1.5 border ${orderMode === 'existing' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-slate-500 border-slate-200/80 hover:bg-slate-50'}`}>
                 <Search size={14} />
                 Обрати існуюче активне
               </Button>
-              {/* ФІКС: Кнопка блокується тільки тоді, коли у запису вже початково є прив'язане замовлення з бекенду */}
               <Button 
                 type="button" 
                 variant="outline" 
@@ -310,7 +409,7 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
               </Button>
             </div>
 
-            {/* РЕЖИМ А: Пошук існуючого */}
+            {/* Пошук існуючого замовлення */}
             {orderMode === 'existing' && (
               <div className="bg-slate-50/60 border border-slate-100 rounded-xl p-3.5 space-y-3">
                 {!selectedOrder ? (
@@ -352,63 +451,153 @@ export default function CreateScheduleModal({ isOpen, onClose, onSuccess, posts,
               </div>
             )}
 
-            {/* РЕЖИМ Б: Секція створення нового замовлення */}
+            {/* Секція розширеного створення нового замовлення */}
             {orderMode === 'new' && !hasInitialOrder && (
-              <div className="bg-emerald-50/20 border border-emerald-100/60 rounded-xl p-4 space-y-4 animate-in fade-in duration-200">
-                <div className="flex items-center gap-1.5 text-emerald-700 font-bold border-b border-emerald-100/50 pb-1.5">
-                  <Car size={14} />
-                  <span>Новий автомобіль та клієнт</span>
-                </div>
+              <div className="bg-slate-50/50 border border-slate-200/60 rounded-xl p-4 space-y-5 animate-in fade-in duration-200">
                 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className={`block text-[10px] uppercase tracking-wider mb-1 ${getFieldError("clientFullName") ? "text-rose-500 font-bold" : "text-slate-400"}`}>Ім'я клієнта</label>
-                    <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Проць Олександр" className={`w-full px-3 h-9 border rounded-xl bg-white focus:outline-none font-medium text-slate-700 ${getFieldError("clientFullName") ? "border-rose-400 bg-rose-50/10 focus:border-rose-500" : "border-slate-200 focus:border-emerald-500"}`} />
-                    {getFieldError("clientFullName") && <span className="text-[10px] text-rose-500 font-semibold mt-0.5 block">{getFieldError("clientFullName")}</span>}
+                {/* 1. ПІДБЛОК: КЛІЄНТ */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
+                    <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
+                      <User size={14} className="text-blue-500" />
+                      <span>Клієнт (Власник)</span>
+                    </div>
+                    <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                      <button type="button" onClick={() => { setClientMode('search'); setSelectedClient(null); }} className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${clientMode === 'search' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-800'}`}>Пошук в базі</button>
+                      <button type="button" onClick={() => { setClientMode('create'); setSelectedClient(null); }} className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${clientMode === 'create' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500 hover:text-slate-800'}`}>Новий клієнт</button>
+                    </div>
                   </div>
-                  <div>
-                    <label className={`block text-[10px] uppercase tracking-wider mb-1 ${getFieldError("clientPhone") ? "text-rose-500 font-bold" : "text-slate-400"}`}>Телефон клієнта</label>
-                    <input type="text" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+380123456789" className={`w-full px-3 h-9 border rounded-xl bg-white focus:outline-none font-medium text-slate-700 ${getFieldError("clientPhone") ? "border-rose-400 bg-rose-50/10 focus:border-rose-500" : "border-slate-200 focus:border-emerald-500"}`} />
-                    {getFieldError("clientPhone") && <span className="text-[10px] text-rose-500 font-semibold mt-0.5 block">{getFieldError("clientPhone")}</span>}
-                  </div>
-                  <div>
-                    <label className={`block text-[10px] uppercase tracking-wider mb-1 ${getFieldError("clientEmail") ? "text-rose-500 font-bold" : "text-slate-400"}`}>Email клієнта</label>
-                    <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="olexandr@gmail.com" className={`w-full px-3 h-9 border rounded-xl bg-white focus:outline-none font-medium text-slate-700 ${getFieldError("clientEmail") ? "border-rose-400 bg-rose-50/10 focus:border-rose-500" : "border-slate-200 focus:border-emerald-500"}`} />
-                    {getFieldError("clientEmail") && <span className="text-[10px] text-rose-500 font-semibold mt-0.5 block">{getFieldError("clientEmail")}</span>}
-                  </div>
+
+                  {clientMode === 'search' ? (
+                    !selectedClient ? (
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                        <input type="text" placeholder="Введіть ПІБ або номер телефону клієнта..." value={clientSearchTerm} onChange={(e) => setClientSearchTerm(e.target.value)} className="w-full pl-9 pr-3 h-9 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white font-medium text-slate-700" />
+                        {clientSearchResults.length > 0 && (
+                          <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-1 z-50 max-h-36 overflow-y-auto">
+                            {clientSearchResults.map(c => (
+                              <div key={c.id} onClick={() => setSelectedClient(c)} className="p-2 text-xs hover:bg-blue-50/50 rounded-lg cursor-pointer flex justify-between items-center">
+                                <span className="font-bold text-slate-700">{c.fullName}</span>
+                                <span className="text-slate-400 text-[11px]">{c.phone}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between bg-blue-50/30 border border-blue-100 rounded-xl px-3 py-2">
+                        <div className="flex items-center gap-2 text-blue-700">
+                          <CheckCircle2 size={14} />
+                          <span>Обрано: <strong>{selectedClient.fullName}</strong> ({selectedClient.phone})</span>
+                        </div>
+                        <Button type="button" variant="ghost" onClick={() => setSelectedClient(null)} className="h-6 px-2 text-slate-400 hover:text-rose-500 text-[10px]">Скинути</Button>
+                      </div>
+                    )
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-3 border border-slate-100 rounded-xl">
+                      <div>
+                        <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1">ПІБ Клієнта</label>
+                        <input type="text" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Проць Олександр" className="w-full px-3 h-9 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 font-medium text-slate-700" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1">Телефон</label>
+                        <input type="text" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+380..." className="w-full px-3 h-9 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 font-medium text-slate-700" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1">Email</label>
+                        <input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="alex@gmail.com" className="w-full px-3 h-9 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 font-medium text-slate-700" />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-                  <div>
-                    <label className={`block text-[10px] uppercase tracking-wider mb-1 ${getFieldError("brandName") ? "text-rose-500 font-bold" : "text-slate-400"}`}>Марка авто</label>
-                    <input type="text" value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="Opel" className={`w-full px-2 h-9 border rounded-xl bg-white focus:outline-none font-medium text-slate-700 ${getFieldError("brandName") ? "border-rose-400 bg-rose-50/10 focus:border-rose-500" : "border-slate-200 focus:border-emerald-500"}`} />
-                    {getFieldError("brandName") && <span className="text-[10px] text-rose-500 font-semibold mt-0.5 block">{getFieldError("brandName")}</span>}
+                {/* 2. ПІДБЛОК: АВТОМОБІЛЬ */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
+                    <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
+                      <Car size={14} className="text-emerald-500" />
+                      <span>Транспортний засіб</span>
+                    </div>
+                    <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                      <button type="button" onClick={() => { setVehicleMode('search'); setSelectedVehicle(null); }} className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${vehicleMode === 'search' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-800'}`}>Пошук в базі</button>
+                      <button type="button" onClick={() => { setVehicleMode('create'); setSelectedVehicle(null); }} className={`px-2 py-1 text-[10px] font-bold rounded-md transition ${vehicleMode === 'create' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500 hover:text-slate-800'}`}>Нове авто</button>
+                    </div>
                   </div>
-                  <div>
-                    <label className={`block text-[10px] uppercase tracking-wider mb-1 ${getFieldError("modelName") ? "text-rose-500 font-bold" : "text-slate-400"}`}>Модель авто</label>
-                    <input type="text" value={modelName} onChange={(e) => setModelName(e.target.value)} placeholder="Astra" className={`w-full px-2 h-9 border rounded-xl bg-white focus:outline-none font-medium text-slate-700 ${getFieldError("modelName") ? "border-rose-400 bg-rose-50/10 focus:border-rose-500" : "border-slate-200 focus:border-emerald-500"}`} />
-                    {getFieldError("modelName") && <span className="text-[10px] text-rose-500 font-semibold mt-0.5 block">{getFieldError("modelName")}</span>}
-                  </div>
-                  <div>
-                    <label className={`block text-[10px] uppercase tracking-wider mb-1 ${getFieldError("licensePlate") ? "text-rose-500 font-bold" : "text-slate-400"}`}>Держ. номер</label>
-                    <input type="text" value={licensePlate} onChange={(e) => setLicensePlate(e.target.value)} placeholder="BC2381AO" className={`w-full px-2 h-9 border rounded-xl bg-white focus:outline-none font-medium text-slate-700 ${getFieldError("licensePlate") ? "border-rose-400 bg-rose-50/10 focus:border-rose-500" : "border-slate-200 focus:border-emerald-500"}`} />
-                    {getFieldError("licensePlate") && <span className="text-[10px] text-rose-500 font-semibold mt-0.5 block">{getFieldError("licensePlate")}</span>}
-                  </div>
-                  <div>
-                    <label className={`block text-[10px] uppercase tracking-wider mb-1 ${getFieldError("Year") ? 'text-rose-500 font-bold' : 'text-slate-400'}`}>Рік випуску *</label>
-                    <input type="number" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2017" className={`w-full px-2 h-9 border rounded-xl bg-white focus:outline-none font-medium text-slate-700 ${getFieldError("Year") ? 'border-rose-400 focus:border-rose-500 bg-rose-50/20' : 'border-slate-200 focus:border-emerald-500'}`} />
-                    {getFieldError("Year") && <span className="text-[10px] text-rose-500 font-semibold mt-0.5 block">{getFieldError("Year")}</span>}
-                  </div>
-                  <div>
-                    <label className={`block text-[10px] uppercase tracking-wider mb-1 ${getFieldError("Vin") ? 'text-rose-500 font-bold' : 'text-slate-400'}`}>VIN код *</label>
-                    <input type="text" value={vin} onChange={(e) => setVin(e.target.value)} placeholder="W0L0AHM75..." className={`w-full px-2 h-9 border rounded-xl bg-white focus:outline-none font-medium text-slate-700 uppercase ${getFieldError("Vin") ? 'border-rose-400 focus:border-rose-500 bg-rose-50/20' : 'border-slate-200 focus:border-emerald-500'}`} />
-                    {getFieldError("Vin") && <span className="text-[10px] text-rose-500 font-semibold mt-0.5 block">{getFieldError("Vin")}</span>}
-                  </div>
+
+                  {vehicleMode === 'search' ? (
+                    !selectedVehicle ? (
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                        <input type="text" placeholder="Введіть держ. номер або останні цифри VIN..." value={vehicleSearchTerm} onChange={(e) => setVehicleSearchTerm(e.target.value)} className="w-full pl-9 pr-3 h-9 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white font-medium text-slate-700" />
+                        {vehicleSearchResults.length > 0 && (
+                          <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg p-1 z-50 max-h-36 overflow-y-auto">
+                            {vehicleSearchResults.map(v => (
+                              <div key={v.id} onClick={() => setSelectedVehicle(v)} className="p-2 text-xs hover:bg-emerald-50/50 rounded-lg cursor-pointer flex justify-between items-center">
+                                <span className="font-bold text-slate-700">{v.brandName} {v.modelName} <span className="text-slate-400 font-medium">({v.licensePlate})</span></span>
+                                <span className="text-slate-400 text-[10px] font-mono">{v.vin}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between bg-emerald-50/40 border border-emerald-100 rounded-xl px-3 py-2">
+                        <div className="flex items-center gap-2 text-emerald-700">
+                          <CheckCircle2 size={14} />
+                          <span>Обрано: <strong>{selectedVehicle.brandName} {selectedVehicle.modelName}</strong> [{selectedVehicle.licensePlate}]</span>
+                        </div>
+                        <Button type="button" variant="ghost" onClick={() => setSelectedVehicle(null)} className="h-6 px-2 text-slate-400 hover:text-rose-500 text-[10px]">Скинути</Button>
+                      </div>
+                    )
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5 bg-white p-3 border border-slate-100 rounded-xl relative">
+                      
+                      {/* Живий автокомпліт БРЕНДУ */}
+                      <div className="relative">
+                        <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1">Марка (Бренд)</label>
+                        <input type="text" value={brandSearchTerm} onChange={(e) => setBrandSearchTerm(e.target.value)} placeholder="Opel" className="w-full px-2 h-9 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-emerald-500 font-medium text-slate-700" />
+                        {brandSearchResults.length > 0 && (
+                          <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl p-1 z-50 max-h-28 overflow-y-auto">
+                            {brandSearchResults.map(b => (
+                              <div key={b.id} onClick={() => { setBrandSearchTerm(b.name); setBrandSearchResults([]); }} className="p-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer">{b.name}</div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Живий автокомпліт МОДЕЛІ */}
+                      <div className="relative">
+                        <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1">Модель авто</label>
+                        <input type="text" value={modelSearchTerm} onChange={(e) => setModelSearchTerm(e.target.value)} placeholder="Astra" className="w-full px-2 h-9 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-emerald-500 font-medium text-slate-700" />
+                        {modelSearchResults.length > 0 && (
+                          <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl p-1 z-50 max-h-28 overflow-y-auto">
+                            {modelSearchResults.map(m => (
+                              <div key={m.id} onClick={() => { setModelSearchTerm(m.name); setModelSearchResults([]); }} className="p-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer">{m.name}</div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1">Держ. номер</label>
+                        <input type="text" value={licensePlate} onChange={(e) => setLicensePlate(e.target.value)} placeholder="BC2381AO" className="w-full px-2 h-9 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-emerald-500 font-medium text-slate-700 uppercase" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1">Рік випуску</label>
+                        <input type="number" value={year} onChange={(e) => setYear(e.target.value)} placeholder="2017" className="w-full px-2 h-9 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-emerald-500 font-medium text-slate-700" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 uppercase tracking-wider mb-1">VIN код</label>
+                        <input type="text" value={vin} onChange={(e) => setVin(e.target.value)} placeholder="W0L0..." className="w-full px-2 h-9 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-emerald-500 font-medium text-slate-700 uppercase" />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
+                {/* 3. ПІДБЛОК: НОТАТКИ ЗАМОВЛЕННЯ */}
                 <div>
                   <label className="block text-slate-400 text-[10px] uppercase tracking-wider mb-1">Внутрішні нотатки до замовлення</label>
-                  <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Скарга на сторонній звук при гальмуванні..." className="w-full px-3 h-9 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-emerald-500 font-medium text-slate-700" />
+                  <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Скарга на сторонній звук при гальмуванні або планове ТО..." className="w-full px-3 h-9 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-blue-500 font-medium text-slate-700" />
                 </div>
               </div>
             )}

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Servio",
+  title: "Servio CRM",
   description: "Система управління автосервісом та обліку замовлень",
 };
 

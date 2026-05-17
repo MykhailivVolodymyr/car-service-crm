@@ -21,9 +21,8 @@ const menuGroups = [
   {
     title: "Управління",
     items: [
-      { name: "Майстри та послуги", icon: Wrench, href: "#" },
-      { name: "Каса", icon: Wallet, href: "#" },
-      { name: "Склад запчастин", icon: Package, href: "#" },
+     { name: "Склад та послуги", icon: Package, href: "/inventory" },
+     { name: "Персонал", icon: Wrench, href: "#" },
     ],
   },
   {

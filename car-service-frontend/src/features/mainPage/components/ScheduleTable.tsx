@@ -4,7 +4,7 @@ import { ScheduleDto } from "../types/Schedule";
 import { Clock, Car, Phone, User, Wrench, Edit2, Trash2 } from "lucide-react"; 
 import { format, differenceInMinutes, isBefore } from "date-fns";
 import { uk } from "date-fns/locale";
-import { useRouter } from "next/navigation"; // Імпорт роутера для навігації
+import { useRouter } from "next/navigation"; 
 import { Button } from "@/components/ui/button"; 
 import {
   Tooltip,
@@ -77,7 +77,6 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
 
   const sortedItems = getSortedSchedules();
 
-  // ОНОВЛЕНО: Функція перевірки та переходу за orderId
   const handleRowClick = (orderId: number | null) => {
     if (orderId !== null && orderId !== undefined) {
       router.push(`/orders/${orderId}`);
@@ -88,19 +87,20 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
     <TooltipProvider delayDuration={200}>
       <div className="w-full font-sans antialiased select-none">
         
-        {/* 1. ДЕСКТОПНА ВЕРСІЯ ТАБЛИЦІ */}
-        <div className="hidden md:block w-full bg-white border border-slate-100 rounded-2xl shadow-sm overflow-x-auto">
-          <table className="w-full border-collapse text-left table-auto min-w-[950px]">
+        {/* 1. ДЕСКТОПНА ВЕРСІЯ ТАБЛИЦІ (ВИПРАВЛЕНО СТИЛІ СКРОЛУ) */}
+        {/* Замінено overflow-x-auto на гнучке керування: скрол з'явиться тільки якщо екран стиснеться менше критичної межі */}
+        <div className="hidden md:block w-full bg-white border border-slate-100 rounded-2xl shadow-sm overflow-x-auto xl:overflow-x-visible">
+          <table className="w-full border-collapse text-left table-fixed lg:table-auto">
             <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="px-4 py-3.5 font-semibold tracking-wide">Час / Дата</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide">Автомобіль</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide">Клієнт</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide">Пост</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide">Майстер</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide">Опис проблеми</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide whitespace-nowrap">Залишилось</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide text-center w-36">Дії</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide w-[12%] min-w-[110px]">Час / Дата</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide w-[18%] min-w-[150px]">Автомобіль</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide w-[20%] min-w-[160px]">Клієнт</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide w-[10%] min-w-[80px]">Пост</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide w-[15%] min-w-[130px]">Майстер</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide w-[15%] min-w-[150px]">Опис проблеми</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide w-[10%] min-w-[90px]">Залишилось</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide text-center w-[120px] shrink-0">Дії</th>
               </tr>
             </thead>
 
@@ -125,7 +125,6 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
                   const hasOrder = item.orderId !== null;
 
                   return (
-                    /* ОНОВЛЕНО: Передаємо item.orderId і підсвічуємо рядок ховером або pointer тільки якщо є замовлення */
                     <tr 
                       key={item.id} 
                       onClick={() => handleRowClick(item.orderId)}
@@ -133,63 +132,62 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
                         hasOrder ? "cursor-pointer hover:bg-slate-100/70" : "cursor-default hover:bg-slate-50/20"
                       }`}
                     >
-                      <td className="px-4 py-3.5 whitespace-nowrap">
+                      <td className="px-4 py-3.5 truncate">
                         <div className={`flex items-center gap-1.5 font-bold text-sm text-slate-900 transition-colors ${hasOrder && "group-hover:text-blue-600"}`}>
                           <Clock size={14} className="text-blue-500 shrink-0" />
                           {formatTimeRange(item.startTime, item.endTime)}
                         </div>
-                        <div className="text-[11px] text-slate-400 font-medium pl-5 mt-0.5 capitalize whitespace-nowrap">
+                        <div className="text-[11px] text-slate-400 font-medium pl-5 mt-0.5 capitalize truncate">
                           {formatDateLabel(item.startTime)}
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5 font-semibold whitespace-nowrap text-slate-900">
-                        <div className="flex items-center gap-1.5">
+                      <td className="px-4 py-3.5 font-semibold text-slate-900 truncate">
+                        <div className="flex items-center gap-1.5 truncate">
                           <Car size={14} className="text-slate-400 shrink-0" />
-                          <span>{item.vehicleDisplay || "—"}</span>
-                          {/* Маленький бейдж для візуального UX, щоб менеджер бачив, чи є вже відкритий наряд */}
-                          {hasOrder && <span className="text-[9px] bg-blue-50 text-blue-600 border border-blue-100 px-1 rounded font-normal scale-90">Наряд</span>}
+                          <span className="truncate">{item.vehicleDisplay || "—"}</span>
+                          {hasOrder && <span className="text-[9px] bg-blue-50 text-blue-600 border border-blue-100 px-1 rounded font-normal scale-90 shrink-0">Наряд</span>}
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <div className="font-bold flex items-center gap-1.5 text-sm text-slate-900">
+                      <td className="px-4 py-3.5 truncate">
+                        <div className="font-bold flex items-center gap-1.5 text-sm text-slate-900 truncate">
                           <User size={13} className="text-slate-400 shrink-0" />
-                          <span>{item.clientName || "Невідомий"}</span>
+                          <span className="truncate">{item.clientName || "Невідомий"}</span>
                         </div>
                         {item.clientPhone && (
-                          <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-1 pl-5 whitespace-nowrap">
+                          <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-1 pl-5 truncate">
                             <Phone size={11} className="text-slate-300 shrink-0" />
                             <span>{item.clientPhone}</span>
                           </div>
                         )}
                       </td>
 
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <span className="px-2.5 py-1 border rounded-lg text-xs font-semibold shadow-sm bg-white border-slate-200 text-slate-600">
+                      <td className="px-4 py-3.5 truncate">
+                        <span className="px-2 py-0.5 border rounded-lg text-xs font-semibold shadow-sm bg-white border-slate-200 text-slate-600 inline-block max-w-full truncate">
                           {item.postName}
                         </span>
                       </td>
 
-                      <td className="px-4 py-3.5 font-medium whitespace-nowrap text-slate-600">
-                        <div className="flex items-center gap-1.5">
+                      <td className="px-4 py-3.5 font-medium text-slate-600 truncate">
+                        <div className="flex items-center gap-1.5 truncate">
                           <Wrench size={13} className="text-slate-400 shrink-0" />
-                          <span className="font-semibold text-slate-800">{item.mechanicName}</span>
+                          <span className="font-semibold text-slate-800 truncate">{item.mechanicName}</span>
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5 max-w-xs truncate text-xs font-medium text-slate-500">
+                      <td className="px-4 py-3.5 truncate text-xs font-medium text-slate-500">
                         {item.description || <span className="text-slate-300 italic font-normal">Немає опису</span>}
                       </td>
 
-                      <td className="px-4 py-3.5 whitespace-nowrap">
+                      <td className="px-4 py-3.5 truncate">
                         <span className={`inline-block font-bold text-[11px] px-2 py-0.5 rounded-md shadow-sm text-white ${status.isPast ? "bg-slate-400" : "bg-amber-500"}`}>
                           {status.text}
                         </span>
                       </td>
 
                       <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1.5">
+                        <div className="flex items-center justify-center gap-1">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button onClick={() => onEditClick(item.id)} className="p-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-xl transition border border-amber-100/60 cursor-pointer">
@@ -246,7 +244,6 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
               const hasOrder = item.orderId !== null;
 
               return (
-                /* ОНОВЛЕНО: Мобільна картка реагує на клік тільки якщо є orderId */
                 <div 
                   key={item.id} 
                   onClick={() => handleRowClick(item.orderId)}
