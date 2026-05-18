@@ -25,3 +25,19 @@ export interface UserUpdateDto {
   roleId: number;
   isActive: boolean;
 }
+
+
+export interface MasterPerformanceDto {
+  masterId: number;
+  masterName: string;
+  ordersCount: number;
+  totalRevenue: number;
+  averageOrderValue: number;
+  totalWorkHours: number;
+}
+
+export interface AnalyticsRequestDto {
+  startDate?: string | null;
+  endDate?: string | null;
+  periodType?: "week" | "month" | "quarter" | "custom" | string | null;
+}

@@ -1,5 +1,5 @@
 import api from "@/lib/axios"; // Твій екземпляр axios
-import { UserDto, CreateMasterDto, MasterCreatedResponseDto, UserUpdateDto } from "../types/Masters";
+import { UserDto, CreateMasterDto, MasterCreatedResponseDto, UserUpdateDto, MasterPerformanceDto } from "../types/Masters";
 import { CreateWorkPostDto, WorkPostDto } from "../types/WorkPosts";
 
 export const masterService = {
@@ -34,6 +34,13 @@ export const masterService = {
   // Повне видалення облікового запису з бази
   deleteMaster: async (id: number): Promise<void> => {
     await api.delete(`/users/${id}`);
+  },
+
+  getMasterPerformance: async (periodType: string = "month"): Promise<MasterPerformanceDto[]> => {
+    const response = await api.get<MasterPerformanceDto[]>(`/analytics/masters-performance`, {
+      params: { periodType }
+    });
+    return response.data;
   },
 
   

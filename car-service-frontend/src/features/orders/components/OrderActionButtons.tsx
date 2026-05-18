@@ -70,7 +70,7 @@ export default function OrderActionButtons({
               className="h-11 sm:h-12 w-full bg-amber-500 hover:bg-amber-600 text-white rounded-xl sm:rounded-2xl font-bold text-xs gap-2 shadow-sm shadow-amber-500/10 cursor-pointer transition-all duration-200 hover:shadow-md px-2 sm:px-6 tracking-wider uppercase"
             >
               <Download size={15} className="shrink-0" />
-              <span className="hidden sm:inline">Експорт звітів</span>
+              <span className="hidden sm:inline">Експорт</span>
               <span className="inline sm:hidden">Експорт</span>
             </Button>
           </TooltipTrigger>

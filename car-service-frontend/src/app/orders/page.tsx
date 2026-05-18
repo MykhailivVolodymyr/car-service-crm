@@ -7,6 +7,7 @@ import OrderStatsCards from "@/features/orders/components/OrderStatsCards";
 import OrderActionButtons from "@/features/orders/components/OrderActionButtons";
 import OrdersTable from "@/features/orders/components/OrdersTable";
 import CreateOrderModal from "@/features/orders/components/CreateOrderModal";
+import { exportToExcel } from "@/utils/excelExport"; // ДОДАНО ІМПОРТ ХЕЛПЕРА
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,9 @@ export default function OrdersPage() {
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
-  // Стейт для відкриття модалки
+  // Стейт для відкриття модалку
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
-  // ОНОВЛЕНО: Стейт для збереження ID замовлення, яке ми хочемо редагувати
+  // Стейт для збереження ID замовлення, яке ми хочемо редагувати
   const [selectedEditOrderId, setSelectedEditOrderId] = useState<number | null>(null);
 
   const [stats, setStats] = useState<OrderStats>({
@@ -69,16 +70,51 @@ export default function OrdersPage() {
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  // ОБРОБНИК НАТИСКАННЯ НА РЕДАГУВАННЯ (Передаємо в таблицю)
+  // ОБРОБНИК НАТИСКАННЯ НА РЕДАГУВАННЯ
   const handleEditClick = (id: number) => {
-    setSelectedEditOrderId(id); // Фіксуємо ID замовлення для PUT запиту
-    setIsCreateModalOpen(true); // Відкриваємо ту саму модалку
+    setSelectedEditOrderId(id); 
+    setIsCreateModalOpen(true); 
   };
 
   // ОБРОБНИК ДЛЯ СТВОРЕННЯ НОВОГО ЗАМОВЛЕННЯ
   const handleNewOrderClick = () => {
-    setSelectedEditOrderId(null); // Строго скидаємо ID, щоб модалка працювала в режимі POST
+    setSelectedEditOrderId(null); 
     setIsCreateModalOpen(true);
+  };
+
+  // 👑 ДОДАНО: ГОЛОВНА ФУНКЦІЯ КЛІЄНТСЬКОГО ЕКСПОРТУ В EXCEL
+  const handleExportToExcel = () => {
+    if (!orders || orders.length === 0) {
+      alert("Немає даних замовлень-нарядів для вивантаження.");
+      return;
+    }
+
+    // Перетворюємо англійські поля DTO на красиві українські колонки таблиці Excel
+    const dataToExport = orders.map((order) => {
+      let formattedDate = "—";
+      try {
+        if (order.createdAt) {
+          const cleanStr = order.createdAt.split(".")[0].replace("Z", "");
+          const d = new Date(cleanStr);
+          formattedDate = d.toLocaleDateString("uk-UA") + " " + d.toLocaleTimeString("uk-UA", { hour: '2-digit', minute: '2-digit' });
+        }
+      } catch {}
+
+      return {
+        "Номер замовлення": `№ ${order.id}`,
+        "Дата та час створення": formattedDate,
+        "Автомобіль контрагента": order.vehicleDetails || "—",
+        "Поточний пробіг": order.mileage ? `${order.mileage.toLocaleString()} км` : "—",
+        "ПІБ Клієнта": order.clientName || "Невідомий водій",
+        "Контактний телефон": order.clientPhone || "—",
+        "Статус ремонту": order.statusName || "—",
+        "Загальна сума (грн)": order.totalAmount || 0,
+        "Коментарі / Нотатки": order.notes || "Відсутні"
+      };
+    });
+
+    // Викликаємо скачування файлу
+    exportToExcel(dataToExport, "Замовлення_Наряди_STO_ServioCRM");
   };
 
   const handlePrintInvoice = async (id: number) => {
@@ -125,11 +161,11 @@ export default function OrdersPage() {
       {/* КАРТКИ СТАТИСТИКИ */}
       <OrderStatsCards stats={stats} loading={loading} />
 
-      {/* ШВИДКІ ДІЇ (Оновлено: викликаємо функцію скидання ID) */}
+      {/* ШВИДКІ ДІЇ — ОНОВЛЕНО: Замість alert передаємо реальну функцію вивантаження звітів */}
       <OrderActionButtons 
         onNewOrderClick={handleNewOrderClick} 
         onClientSearchClick={() => alert("Перехід до бази контрагентів СТО")} 
-        onExportClick={() => alert("Експорт поточної таблиці замовлень в Excel")} 
+        onExportClick={handleExportToExcel} // ЗМІНЕНО ТУТ
       />
 
       {/* ШАПКА ТАБЛИЦІ */}
@@ -153,7 +189,7 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* ГОЛОВНА ТАБЛИЦЯ ЗАМОВЛЕНЬ (Оновлено: замість alert передаємо handleEditClick) */}
+      {/* ГОЛОВНА ТАБЛИЦЯ ЗАМОВЛЕНЬ */}
       <OrdersTable 
         orders={orders}
         loading={loading}
@@ -162,16 +198,16 @@ export default function OrdersPage() {
         onDeleteClick={(id) => setDeleteOrderId(id)}
       />
 
-      {/* ОНОВЛЕНО: МОДАЛКА ФОРМИ (Створення / Редагування) */}
+      {/* МОДАЛКА ФОРМИ (Створення / Редагування) */}
       <CreateOrderModal 
         isOpen={isCreateModalOpen}
-        orderId={selectedEditOrderId} // Передаємо поточний ID (або null)
+        orderId={selectedEditOrderId} 
         onClose={() => {
           setIsCreateModalOpen(false);
-          setSelectedEditOrderId(null); // Завжди зачищаємо ID при закритті вікна
+          setSelectedEditOrderId(null); 
         }}
         onSuccess={() => {
-          handleRefresh(); // Оновлюємо інтерфейс СТО після успішного PUT запиту
+          handleRefresh(); 
         }}
       />
 

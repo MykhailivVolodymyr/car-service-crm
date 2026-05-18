@@ -10,6 +10,7 @@ import DashboardActionButtons from "@/features/mainPage/components/DashboardActi
 import ScheduleFilters from "@/features/mainPage/components/ScheduleFilters";
 import ScheduleTable from "@/features/mainPage/components/ScheduleTable";
 import CreateScheduleModal from "@/features/mainPage/components/CreateScheduleModal";
+import { exportToExcel } from "@/utils/excelExport"; // ДОДАНО ІМПОРТ ХЕЛПЕРА
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
@@ -41,12 +42,11 @@ export default function HomePage() {
 
   const [error, setError] = useState<string | null>(null);
 
-  // Синхронізуємо стейт фільтрів при зміні дати в URL (з хедера)
+  // Synchronize filter state with URL date changes
   useEffect(() => {
     setFilters(prev => ({ ...prev, date: dateFromUrl }));
   }, [dateFromUrl]);
 
-  // Якщо користувач міняє дату вручну через інпут фільтрів, синхронізуємо URL
   const handleFilterChange = (newFilters: ScheduleFilterDto) => {
     setFilters(newFilters);
     
@@ -107,7 +107,6 @@ export default function HomePage() {
     fetchSchedules();
   }, [filters, refreshTrigger]);
 
-  // ВИПРАВЛЕНО: тепер очищення фільтрів повністю скидає URL-параметри
   const handleClearFilters = () => {
     setFilters({});
     router.push(pathname); 
@@ -132,6 +131,41 @@ export default function HomePage() {
     setSelectedScheduleId(null);
   };
 
+  // 👑 ДОДАНО: ФУНКЦІЯ ЕКСПОРТУ РОЗКЛАДУ ГОЛОВНОЇ СТОРІНКИ В EXCEL
+  const handleExportToExcel = () => {
+    if (!schedules || schedules.length === 0) {
+      alert("Немає записів розкладу для вивантаження.");
+      return;
+    }
+
+    const dataToExport = schedules.map((item) => {
+      let formattedDate = "—";
+      let formattedTime = "—";
+
+      try {
+        if (item.startTime) {
+          formattedDate = item.startTime.split('T')[0];
+          if (item.endTime) {
+            formattedTime = `${item.startTime.substring(11, 16)} - ${item.endTime.substring(11, 16)}`;
+          }
+        }
+      } catch {}
+
+      return {
+        "Дата візиту": formattedDate,
+        "Плановий час": formattedTime,
+        "Автомобіль": item.vehicleDisplay || "Бронь без авто",
+        "ПІБ Клієнта": item.clientName || "Не вказано",
+        "Телефон водія": item.clientPhone || "—",
+        "Робочий пост СТО": item.postName || "—",
+        "Закріплений майстер": item.mechanicName || "—",
+        "Опис проблеми": item.description || "Немає опису"
+      };
+    });
+
+    exportToExcel(dataToExport, "Розклад_Записів_Головна_ServioCRM");
+  };
+
   const handleConfirmDelete = async () => {
     if (!deleteScheduleId) return;
     try {
@@ -151,11 +185,15 @@ export default function HomePage() {
     <div className="p-4 md:py-4 md:px-6 space-y-4 font-sans">
       <DashboardStatsCards data={stats} loading={statsLoading} />
       
-      <DashboardActionButtons onNewScheduleClick={handleOpenCreateModal} />
+      {/* ОНОВЛЕНО: Передаємо реальну функцію експорту об'єктів розкладу */}
+      <DashboardActionButtons 
+        onNewScheduleClick={handleOpenCreateModal} 
+        onExportClick={handleExportToExcel} // ЗМІНЕНО ТУТ
+      />
       
       <ScheduleFilters 
         filters={filters} 
-        onFilterChange={handleFilterChange} // Використовуємо нову функцію
+        onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
         onRefresh={handleRefresh}
         totalCount={schedules.length}

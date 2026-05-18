@@ -2,14 +2,15 @@
 
 import { PlusCircle, Search, Wrench, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation"; // ДОДАНО ІМПОРТ ХУКА НАВІГАЦІЇ
+import { useRouter } from "next/navigation";
 
 interface DashboardActionButtonsProps {
   onNewScheduleClick: () => void;
+  onExportClick: () => void; // ДОДАНО
 }
 
-export default function DashboardActionButtons({ onNewScheduleClick }: DashboardActionButtonsProps) {
-  const router = useRouter(); // ІНІЦІАЛІЗАЦІЯ РОУТЕРА
+export default function DashboardActionButtons({ onNewScheduleClick, onExportClick }: DashboardActionButtonsProps) {
+  const router = useRouter();
 
   return (
     <div className="grid grid-cols-4 gap-2 md:gap-3.5 w-full font-sans select-none antialiased">
@@ -29,17 +30,20 @@ export default function DashboardActionButtons({ onNewScheduleClick }: Dashboard
         <span className="hidden sm:inline">Пошук клієнта</span>
       </Button>
 
-      {/* Кнопка 3: Майстри — ТЕПЕР ПЕРЕНАПРАВЛЯЄ НА ХАБ МАЙСТРІВ ТА ПОСТІВ */}
+      {/* Кнопка 3: Майстри */}
       <Button 
-        onClick={() => router.push("/workshop")} // ДОДАНО КЛІК НАВІГАЦІЇ
+        onClick={() => router.push("/workshop")} 
         className="w-full bg-sky-500 hover:bg-sky-600 text-white h-10 md:h-12 rounded-xl text-xs md:text-sm font-bold gap-2 cursor-pointer shadow-sm transition-all duration-200"
       >
         <Wrench size={16} className="shrink-0 md:size-[18px]" />
         <span className="hidden sm:inline">Майстри</span>
       </Button>
 
-      {/* Кнопка 4: Експорт */}
-      <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white h-10 md:h-12 rounded-xl text-xs md:text-sm font-bold gap-2 cursor-pointer shadow-sm transition-all duration-200">
+      {/* Кнопка 4: Експорт — ТЕПЕР ОЖИВАЄ */}
+      <Button 
+        onClick={onExportClick} // ОНОВЛЕНО
+        className="w-full bg-amber-500 hover:bg-amber-600 text-white h-10 md:h-12 rounded-xl text-xs md:text-sm font-bold gap-2 cursor-pointer shadow-sm transition-all duration-200"
+      >
         <Download size={16} className="shrink-0 md:size-[18px]" />
         <span className="hidden sm:inline">Експорт</span>
       </Button>

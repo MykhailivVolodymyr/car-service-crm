@@ -4,19 +4,25 @@ import { useEffect, useState } from "react";
 import { masterService } from "../services/masterService";
 import { UserDto } from "../types/Masters";
 import UpsertMasterModal from "./UpsertMasterModal";
-import { Search, UserPlus, RefreshCw, Edit2, Trash2, Mail, Phone, ShieldCheck, ToggleLeft, ToggleRight, Loader2, UserX, UserCheck, CalendarDays } from "lucide-react";
+import MasterAnalyticsModal from "./MasterAnalyticsModal"; 
+import { Search, UserPlus, RefreshCw, Edit2, Trash2, Mail, Phone, ShieldCheck, Loader2, UserX, UserCheck, CalendarDays, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+// ВІДНОВЛЕНО: Інтерфейс для стейту модалки видалення (Виправляє помилку "Cannot find name 'DeleteModalState'")
 interface DeleteModalState {
   isOpen: boolean;
   id: number | null;
   name: string;
 }
 
-export default function MastersTab() {
+interface MastersTabProps {
+  onHubRefresh?: () => void;
+}
+
+export default function MastersTab({ onHubRefresh }: MastersTabProps) {
   const [masters, setMasters] = useState<UserDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [isBackgroundRefreshing, setIsBackgroundRefreshing] = useState(false);
@@ -30,6 +36,13 @@ export default function MastersTab() {
   const [selectedMasterId, setSelectedMasterId] = useState<number | null>(null);
   const [deleteModal, setDeleteModal] = useState<DeleteModalState>({ isOpen: false, id: null, name: "" });
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Стейт для модалки аналітики ефективності (KPI)
+  const [analyticsModal, setAnalyticsModal] = useState<{ isOpen: boolean; id: number | null; name: string }>({
+    isOpen: false,
+    id: null,
+    name: ""
+  });
 
   useEffect(() => {
     const loadMasters = async () => {
@@ -49,7 +62,10 @@ export default function MastersTab() {
     loadMasters();
   }, [refreshTrigger]);
 
-  const handleRefresh = () => setRefreshTrigger(p => p + 1);
+  const handleRefresh = () => {
+    setRefreshTrigger(p => p + 1);
+    onHubRefresh?.(); 
+  };
 
   const handleToggleStatus = async (id: number) => {
     try {
@@ -91,18 +107,14 @@ export default function MastersTab() {
     }
   };
 
-  // ОНОВЛЕНО: ГЕНЕРАЦІЯ РЕАЛІСТИЧНИХ ДАТ ЗА ОСТАННІЙ МІСЯЦЬ (КВІТЕНЬ - ТРАВЕНЬ 2026)
   const getRegistrationDateById = (id: number): string => {
     const year = 2026;
-    // Чергуємо квітень (04) та травень (05) залежно від ID
     const month = (id % 2 === 0) ? 4 : 5;
     
     let day = 1;
     if (month === 4) {
-      // Для квітня беремо другу половину місяця (від 15 до 30)
       day = 15 + (id % 15);
     } else {
-      // Для травня беремо першу половину (від 1 до 12)
       day = 1 + (id % 12);
     }
     
@@ -129,7 +141,7 @@ export default function MastersTab() {
           </div>
         )}
 
-        {/* ПАНЕЛЬ ФІЛЬТРІВ — ОДИН В ОДИН ЯК НА СКЛАДІ */}
+        {/* ПАНЕЛЬ ФІЛЬТРІВ */}
         <div className="flex flex-row items-center justify-between gap-3 bg-white border border-slate-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm select-none">
           <div className="flex flex-row items-center gap-3 flex-1">
             <div className="relative flex-1 max-w-md">
@@ -235,13 +247,21 @@ export default function MastersTab() {
                 </div>
 
                 {/* Lower block */}
-                <div className="grid grid-cols-2 gap-2 pt-0.5">
+                <div className="grid grid-cols-3 gap-1.5 pt-0.5">
                   <button 
                     onClick={() => handleEditClick(m.id)} 
                     className="flex justify-center items-center py-2 bg-amber-50 hover:bg-amber-100/80 text-amber-600 rounded-xl border border-amber-100/60 cursor-pointer text-[11px] font-bold gap-1 transition-colors"
                   >
                     <Edit2 size={12} /> Картка
                   </button>
+
+                  <button 
+                    onClick={() => setAnalyticsModal({ isOpen: true, id: m.id, name: m.fullName })} 
+                    className="flex justify-center items-center py-2 bg-blue-50 hover:bg-blue-100/80 text-blue-600 rounded-xl border border-blue-100/60 cursor-pointer text-[11px] font-bold gap-1 transition-colors"
+                  >
+                    <BarChart3 size={12} /> КРІ
+                  </button>
+
                   <button 
                     onClick={() => handleDeleteClick(m.id, m.fullName)} 
                     className="flex justify-center items-center py-2 bg-rose-50 hover:bg-rose-100/80 text-rose-600 rounded-xl border border-rose-100/60 cursor-pointer text-[11px] font-bold gap-1 transition-colors"
@@ -255,7 +275,8 @@ export default function MastersTab() {
         )}
 
         {/* МОДАЛКА ВИДАЛЕННЯ КАДРУ */}
-        <Dialog open={deleteModal.isOpen} onOpenChange={(open) => !open && setDeleteModal(prev => ({ ...prev, isOpen: false }))}>
+        {/* ОНОВЛЕНО: Явно типізовано стрілочну функцію (prev: DeleteModalState) для усунення помилки implicitly has an 'any' type */}
+        <Dialog open={deleteModal.isOpen} onOpenChange={(open) => !open && setDeleteModal((prev: DeleteModalState) => ({ ...prev, isOpen: false }))}>
           <DialogContent className="sm:max-w-[420px] rounded-2xl p-6 font-sans border border-slate-100 shadow-2xl bg-white">
             <DialogHeader className="space-y-3">
               <div className="mx-auto sm:mx-0 flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-rose-600 border border-rose-100"><UserX size={20} className="stroke-[2.5]" /></div>
@@ -282,6 +303,14 @@ export default function MastersTab() {
           onSuccess={() => {
             handleRefresh();
           }}
+        />
+
+        {/* УНІВЕРСАЛЬНА МОДАЛКА KPI АНАЛІТИКИ СЛЮСАРЯ */}
+        <MasterAnalyticsModal 
+          isOpen={analyticsModal.isOpen}
+          masterId={analyticsModal.id}
+          masterName={analyticsModal.name}
+          onClose={() => setAnalyticsModal(p => ({ ...p, isOpen: false }))}
         />
 
       </div>
