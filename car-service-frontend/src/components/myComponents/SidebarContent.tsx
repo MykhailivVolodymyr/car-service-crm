@@ -22,7 +22,7 @@ const menuGroups = [
     title: "Управління",
     items: [
      { name: "Склад та послуги", icon: Package, href: "/inventory" },
-     { name: "Персонал", icon: Wrench, href: "#" },
+     { name: "Майстри та пости", icon: Wrench, href: "/workshop" },
     ],
   },
   {
@@ -34,17 +34,8 @@ const menuGroups = [
   {
     title: "Система",
     items: [
-      { name: "Налаштування", icon: Settings, href: "#" },
-      { name: "AI-Аналіз", icon: Brain, href: "#" },
-      { name: "Тариф / Баланс", icon: CreditCard, href: "#" },
+      { name: "Налаштування", icon: Settings, href: "/settings" },
       { name: "Зворотній зв'язок", icon: MessageSquare, href: "#" },
-    ],
-  },
-  {
-    title: "Зовнішні посилання",
-    items: [
-      { name: "Автозапчастини", icon: ExternalLink, href: "#" },
-      { name: "Підтримка", icon: LifeBuoy, href: "#" },
     ],
   },
 ];

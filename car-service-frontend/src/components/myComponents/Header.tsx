@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation"; // ОНОВЛЕНО: додано useRouter
 import { tokenService } from "@/services/tokenService";
 import { Clock, Calendar as CalendarIcon, LogOut, User, Settings, Menu } from "lucide-react";
 import { format } from "date-fns";
@@ -22,6 +22,7 @@ import {
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter(); // ІНІЦІАЛІЗАЦІЯ РОУТЕРА Next.js
   const [user, setUser] = useState<{ fullName: string; role: string } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isOpen, setIsOpen] = useState(false);
@@ -73,7 +74,7 @@ export default function Header() {
             <SheetContent side="left" className="p-0 !w-[230px] !max-w-[230px] border-r-0">
               <SidebarContent onItemClick={() => setIsOpen(false)} />
             </SheetContent>
-          </Sheet>
+         </Sheet>
         </div>
 
         {/* Стрічка тижня: чітко зафіксована зліва */}
@@ -82,7 +83,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* ПРАВА ЧАСТИНА: Відштовхнута за допомогою ml-auto і має акуратні внутрішні відступи */}
+      {/* ПРАВА ЧАСТИНА */}
       <div className="flex items-center gap-4 md:gap-5 ml-auto shrink-0">
         
         {/* Час та Дата */}
@@ -150,7 +151,12 @@ export default function Header() {
                 <User size={16} />
                 <span>Профіль</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer text-slate-700 gap-2">
+              
+              {/* ОНОВЛЕНО: додано onClick для перенаправлення на сторінку налаштувань */}
+              <DropdownMenuItem 
+                onClick={() => router.push("/settings")} 
+                className="cursor-pointer text-slate-700 gap-2"
+              >
                 <Settings size={16} />
                 <span>Налаштування</span>
               </DropdownMenuItem>

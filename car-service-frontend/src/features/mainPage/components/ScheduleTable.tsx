@@ -87,20 +87,21 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
     <TooltipProvider delayDuration={200}>
       <div className="w-full font-sans antialiased select-none">
         
-        {/* 1. ДЕСКТОПНА ВЕРСІЯ ТАБЛИЦІ (ВИПРАВЛЕНО СТИЛІ СКРОЛУ) */}
-        {/* Замінено overflow-x-auto на гнучке керування: скрол з'явиться тільки якщо екран стиснеться менше критичної межі */}
-        <div className="hidden md:block w-full bg-white border border-slate-100 rounded-2xl shadow-sm overflow-x-auto xl:overflow-x-visible">
-          <table className="w-full border-collapse text-left table-fixed lg:table-auto">
+        {/* 1. ДЕСКТОПНА ВЕРСІЯ ТАБЛИЦІ (УСУНЕНО ГОРИЗОНТАЛЬНИЙ СКРОЛ) */}
+        {/* Прибрано фіксований overflow-x-auto для великих екранів, таблиця тепер займає строго 100% ширини */}
+        <div className="hidden md:block w-full bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+          {/* ОНОВЛЕНО: Замінено table-fixed на table-auto та прибрано жорсткі відсоткові ширини колон") */}
+          <table className="w-full border-collapse text-left table-auto">
             <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="px-4 py-3.5 font-semibold tracking-wide w-[12%] min-w-[110px]">Час / Дата</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide w-[18%] min-w-[150px]">Автомобіль</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide w-[20%] min-w-[160px]">Клієнт</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide w-[10%] min-w-[80px]">Пост</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide w-[15%] min-w-[130px]">Майстер</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide w-[15%] min-w-[150px]">Опис проблеми</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide w-[10%] min-w-[90px]">Залишилось</th>
-                <th className="px-4 py-3.5 font-semibold tracking-wide text-center w-[120px] shrink-0">Дії</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide whitespace-nowrap">Час / Дата</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide whitespace-nowrap">Автомобіль</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide whitespace-nowrap">Клієнт</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide text-center whitespace-nowrap">Пост</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide whitespace-nowrap">Майстер</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide whitespace-nowrap">Опис проблеми</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide whitespace-nowrap">Залишилось</th>
+                <th className="px-4 py-3.5 font-semibold tracking-wide text-center w-[130px] shrink-0 whitespace-nowrap">Дії</th>
               </tr>
             </thead>
 
@@ -132,60 +133,70 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
                         hasOrder ? "cursor-pointer hover:bg-slate-100/70" : "cursor-default hover:bg-slate-50/20"
                       }`}
                     >
-                      <td className="px-4 py-3.5 truncate">
-                        <div className={`flex items-center gap-1.5 font-bold text-sm text-slate-900 transition-colors ${hasOrder && "group-hover:text-blue-600"}`}>
+                      {/* Час / Дата */}
+                      <td className="px-4 py-3.5">
+                        <div className={`flex items-center gap-1.5 font-bold text-sm text-slate-900 transition-colors whitespace-nowrap ${hasOrder && "group-hover:text-blue-600"}`}>
                           <Clock size={14} className="text-blue-500 shrink-0" />
                           {formatTimeRange(item.startTime, item.endTime)}
                         </div>
-                        <div className="text-[11px] text-slate-400 font-medium pl-5 mt-0.5 capitalize truncate">
+                        <div className="text-[11px] text-slate-400 font-medium pl-5 mt-0.5 capitalize whitespace-nowrap">
                           {formatDateLabel(item.startTime)}
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5 font-semibold text-slate-900 truncate">
-                        <div className="flex items-center gap-1.5 truncate">
+                      {/* Автомобіль */}
+                      <td className="px-4 py-3.5 font-semibold text-slate-900 max-w-[180px]">
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <Car size={14} className="text-slate-400 shrink-0" />
-                          <span className="truncate">{item.vehicleDisplay || "—"}</span>
+                          <span className="truncate" title={item.vehicleDisplay || ""}>{item.vehicleDisplay || "—"}</span>
                           {hasOrder && <span className="text-[9px] bg-blue-50 text-blue-600 border border-blue-100 px-1 rounded font-normal scale-90 shrink-0">Наряд</span>}
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5 truncate">
-                        <div className="font-bold flex items-center gap-1.5 text-sm text-slate-900 truncate">
+                      {/* Клієнт */}
+                      <td className="px-4 py-3.5 max-w-[180px]">
+                        <div className="font-bold flex items-center gap-1.5 text-sm text-slate-900 min-w-0">
                           <User size={13} className="text-slate-400 shrink-0" />
-                          <span className="truncate">{item.clientName || "Невідомий"}</span>
+                          <span className="truncate" title={item.clientName || ""}>{item.clientName || "Невідомий"}</span>
                         </div>
                         {item.clientPhone && (
-                          <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-1 pl-5 truncate">
+                          <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-1 pl-5 whitespace-nowrap">
                             <Phone size={11} className="text-slate-300 shrink-0" />
                             <span>{item.clientPhone}</span>
                           </div>
                         )}
                       </td>
 
-                      <td className="px-4 py-3.5 truncate">
-                        <span className="px-2 py-0.5 border rounded-lg text-xs font-semibold shadow-sm bg-white border-slate-200 text-slate-600 inline-block max-w-full truncate">
+                      {/* Пост */}
+                      <td className="px-4 py-3.5 text-center">
+                        <span className="px-2 py-0.5 border rounded-lg text-xs font-semibold shadow-sm bg-white border-slate-200 text-slate-600 inline-block max-w-[120px] truncate" title={item.postName}>
                           {item.postName}
                         </span>
                       </td>
 
-                      <td className="px-4 py-3.5 font-medium text-slate-600 truncate">
-                        <div className="flex items-center gap-1.5 truncate">
+                      {/* Майстер */}
+                      <td className="px-4 py-3.5 font-medium text-slate-600 max-w-[150px]">
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <Wrench size={13} className="text-slate-400 shrink-0" />
-                          <span className="font-semibold text-slate-800 truncate">{item.mechanicName}</span>
+                          <span className="font-semibold text-slate-800 truncate" title={item.mechanicName}>{item.mechanicName}</span>
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5 truncate text-xs font-medium text-slate-500">
-                        {item.description || <span className="text-slate-300 italic font-normal">Немає опису</span>}
+                      {/* Опис проблеми */}
+                      <td className="px-4 py-3.5 max-w-[200px]">
+                        <div className="text-xs font-medium text-slate-500 truncate" title={item.description || ""}>
+                          {item.description || <span className="text-slate-300 italic font-normal">Немає опису</span>}
+                        </div>
                       </td>
 
-                      <td className="px-4 py-3.5 truncate">
-                        <span className={`inline-block font-bold text-[11px] px-2 py-0.5 rounded-md shadow-sm text-white ${status.isPast ? "bg-slate-400" : "bg-amber-500"}`}>
+                      {/* Залишилось */}
+                      <td className="px-4 py-3.5">
+                        <span className={`inline-block font-bold text-[11px] px-2 py-0.5 rounded-md shadow-sm text-white whitespace-nowrap ${status.isPast ? "bg-slate-400" : "bg-amber-500"}`}>
                           {status.text}
                         </span>
                       </td>
 
+                      {/* Дії */}
                       <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1">
                           <Tooltip>
