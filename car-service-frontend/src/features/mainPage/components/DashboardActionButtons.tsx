@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 interface DashboardActionButtonsProps {
   onNewScheduleClick: () => void;
-  onExportClick: () => void; // ДОДАНО
+  onExportClick: () => void; 
 }
 
 export default function DashboardActionButtons({ onNewScheduleClick, onExportClick }: DashboardActionButtonsProps) {
@@ -24,8 +24,11 @@ export default function DashboardActionButtons({ onNewScheduleClick, onExportCli
         <span className="hidden sm:inline">Новий запис</span>
       </Button>
 
-      {/* Кнопка 2: Пошук клієнта */}
-      <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-10 md:h-12 rounded-xl text-xs md:text-sm font-bold gap-2 cursor-pointer shadow-sm transition-all duration-200">
+      {/* Кнопка 2: 👑 ОНОВЛЕНО: Пошук клієнта (Тепер перенаправляє на сторінку /clients) */}
+      <Button 
+        onClick={() => router.push("/clients")}
+        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-10 md:h-12 rounded-xl text-xs md:text-sm font-bold gap-2 cursor-pointer shadow-sm transition-all duration-200"
+      >
         <Search size={16} className="shrink-0 md:size-[18px]" />
         <span className="hidden sm:inline">Пошук клієнта</span>
       </Button>
@@ -39,9 +42,9 @@ export default function DashboardActionButtons({ onNewScheduleClick, onExportCli
         <span className="hidden sm:inline">Майстри</span>
       </Button>
 
-      {/* Кнопка 4: Експорт — ТЕПЕР ОЖИВАЄ */}
+      {/* Кнопка 4: Експорт */}
       <Button 
-        onClick={onExportClick} // ОНОВЛЕНО
+        onClick={onExportClick} 
         className="w-full bg-amber-500 hover:bg-amber-600 text-white h-10 md:h-12 rounded-xl text-xs md:text-sm font-bold gap-2 cursor-pointer shadow-sm transition-all duration-200"
       >
         <Download size={16} className="shrink-0 md:size-[18px]" />

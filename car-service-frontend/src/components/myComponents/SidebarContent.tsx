@@ -15,7 +15,7 @@ const menuGroups = [
     items: [
       { name: "Головна", icon: LayoutDashboard, href: "/" },
       { name: "Замовлення", icon: ClipboardList, href: "/orders" },
-      { name: "Знайти клієнта", icon: Search, href: "#" },
+      { name: "Знайти клієнта", icon: Search, href: "/clients" },
     ],
   },
   {

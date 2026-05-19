@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Download } from "lucide-react";
+import { useRouter } from "next/navigation"; // 👑 ДОДАНО
 import {
   Tooltip,
   TooltipContent,
@@ -11,20 +12,19 @@ import {
 
 interface OrderActionButtonsProps {
   onNewOrderClick: () => void;
-  onClientSearchClick: () => void;
+  onClientSearchClick?: () => void; // Робимо опціональним, бо тепер кнопка автономна
   onExportClick: () => void;
 }
 
 export default function OrderActionButtons({
   onNewOrderClick,
-  onClientSearchClick,
   onExportClick,
 }: OrderActionButtonsProps) {
+  const router = useRouter(); // 👑 ІНІЦІАЛІЗАЦІЯ РОУТЕРА
+
   return (
     <TooltipProvider delayDuration={200}>
-      {/* Завдяки `grid-cols-3` усе ЗАВЖДИ буде в один рядок — і на телефонах, і на моніторах.
-        Зменшено відступи (gap-2) для мобільних, які розширюються до sm:gap-4 на десктопі.
-      */}
+      {/* Завдяки `grid-cols-3` усе ЗАВЖДИ буде в один рядок — і на телефонах, і на моніторах. */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4 font-sans select-none antialiased w-full">
         
         {/* Кнопка 1: Створення замовлення-наряду */}
@@ -35,7 +35,6 @@ export default function OrderActionButtons({
               className="h-11 sm:h-12 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl sm:rounded-2xl font-bold text-xs gap-2 shadow-sm shadow-blue-500/10 cursor-pointer transition-all duration-200 hover:shadow-md px-2 sm:px-6 tracking-wider uppercase"
             >
               <Plus size={16} className="stroke-[3] shrink-0" />
-              {/* text-hidden ховає довгий текст на смартфонах і показує від sm-екранів */}
               <span className="hidden sm:inline">Нове замовлення</span>
               <span className="inline sm:hidden">Нове</span>
             </Button>
@@ -45,11 +44,11 @@ export default function OrderActionButtons({
           </TooltipContent>
         </Tooltip>
 
-        {/* Кнопка 2: База клієнтів */}
+        {/* Кнопка 2: 👑 ОНОВЛЕНО: Перехід до бази контрагентів */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              onClick={onClientSearchClick}
+              onClick={() => router.push("/clients")} // Клікнув — і миттєво в базі клієнтів
               className="h-11 sm:h-12 w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl sm:rounded-2xl font-bold text-xs gap-2 shadow-sm shadow-emerald-500/10 cursor-pointer transition-all duration-200 hover:shadow-md px-2 sm:px-6 tracking-wider uppercase"
             >
               <Search size={15} className="shrink-0" />
