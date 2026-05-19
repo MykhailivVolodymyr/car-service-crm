@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation"; // ОНОВЛЕНО: додано useRouter
+import { usePathname, useRouter } from "next/navigation"; 
 import { tokenService } from "@/services/tokenService";
 import { Clock, Calendar as CalendarIcon, LogOut, User, Settings, Menu } from "lucide-react";
 import { format } from "date-fns";
@@ -22,7 +22,7 @@ import {
 
 export default function Header() {
   const pathname = usePathname();
-  const router = useRouter(); // ІНІЦІАЛІЗАЦІЯ РОУТЕРА Next.js
+  const router = useRouter(); 
   const [user, setUser] = useState<{ fullName: string; role: string } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isOpen, setIsOpen] = useState(false);
@@ -59,10 +59,10 @@ export default function Header() {
   };
 
   return (
-    <header className="h-16 w-full border-b bg-white px-4 md:px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm font-sans antialiased">
+    <header className="h-16 w-full border-b bg-white px-4 md:px-6 flex items-center justify-between sticky top-0 z-10 shadow-sm font-sans antialiased select-none">
       
       {/* ЛІВА ЧАСТИНА: Бургер + Календар (Групуються разом зліва) */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         {/* Мобільний бургер */}
         <div className="flex items-center lg:hidden">
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -74,39 +74,41 @@ export default function Header() {
             <SheetContent side="left" className="p-0 !w-[230px] !max-w-[230px] border-r-0">
               <SidebarContent onItemClick={() => setIsOpen(false)} />
             </SheetContent>
-         </Sheet>
+          </Sheet>
         </div>
 
-        {/* Стрічка тижня: чітко зафіксована зліва */}
+        {/* Стрічка тижня: прибираємо деформацію за допомогою shrink-0 */}
         <div className="hidden sm:block shrink-0">
           <WeeklyCalendarStrip />
         </div>
       </div>
 
       {/* ПРАВА ЧАСТИНА */}
-      <div className="flex items-center gap-4 md:gap-5 ml-auto shrink-0">
+      <div className="flex items-center gap-4 md:gap-5 ml-auto shrink-0 pl-4">
         
-        {/* Час та Дата */}
+        {/* Блок часу та дати */}
         <div className="flex items-center gap-4 text-slate-600">
-          {/* Годинник */}
-          <div className="flex items-center gap-2 font-medium">
-            <Clock size={18} className="text-blue-500 shrink-0" />
-            <span className="text-xs md:text-sm tabular-nums min-w-[50px]">
+          
+          {/* 👑 ВИПРАВЛЕНО: Годинник ховається на середніх екранах (md, lg) через `hidden sm:hidden xl:flex` */}
+          {/* Він відображається на телефонах (де немає календаря взагалі) та на великих моніторах (де повно місця) */}
+          <div className="flex sm:hidden xl:flex items-center gap-2 font-medium">
+            <Clock size={17} className="text-blue-500 shrink-0" />
+            <span className="text-xs md:text-sm tabular-nums min-w-[42px] text-slate-700 font-bold">
               {isLoaded ? format(currentTime, "HH:mm") : "--:--"}
             </span>
           </div>
 
-          {/* Дата */}
-          <div className="hidden md:flex items-center gap-2 font-medium border-l border-slate-100 pl-4">
-            <CalendarIcon size={18} className="text-blue-500 shrink-0" />
-            <span className="text-sm text-slate-700 font-semibold">
+          {/* Дата: з'являється тільки на великих екранах */}
+          <div className="hidden xl:flex items-center gap-2 font-medium border-l border-slate-100 pl-4">
+            <CalendarIcon size={17} className="text-blue-500 shrink-0" />
+            <span className="text-xs md:text-sm text-slate-700 font-bold tabular-nums">
               {format(currentTime, "dd.MM.yyyy")}
             </span>
           </div>
         </div>
 
         {/* Профіль користувача */}
-        <div className="border-l border-slate-100 pl-4">
+        <div className="border-l border-slate-100 pl-4 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 md:gap-3 outline-none cursor-pointer group select-none">
               <div className="hidden md:flex flex-col items-end transition group-hover:opacity-80 min-h-[32px] justify-center">
@@ -152,7 +154,6 @@ export default function Header() {
                 <span>Профіль</span>
               </DropdownMenuItem>
               
-              {/* ОНОВЛЕНО: додано onClick для перенаправлення на сторінку налаштувань */}
               <DropdownMenuItem 
                 onClick={() => router.push("/settings")} 
                 className="cursor-pointer text-slate-700 gap-2"

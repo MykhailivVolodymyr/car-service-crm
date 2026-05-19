@@ -26,16 +26,16 @@ const menuGroups = [
     ],
   },
   {
-    title: "Звіти",
+    title: "Звітність",
     items: [
-      { name: "Аналітика", icon: BarChart3, href: "#" },
+      { name: "Звіти та аналітика", icon: BarChart3, href: "/analytics" },
     ],
   },
   {
     title: "Система",
     items: [
       { name: "Налаштування", icon: Settings, href: "/settings" },
-      { name: "Зворотній зв'язок", icon: MessageSquare, href: "#" },
+      { name: "Зворотній зв'язок", icon: MessageSquare, href: "/feedback" },
     ],
   },
 ];

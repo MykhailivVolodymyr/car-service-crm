@@ -83,14 +83,19 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
     }
   };
 
+  // 👑 КЛІЄНТСЬКА НАВІГАЦІЯ: Перехід на картку контрагента 360°
+  const handleClientProfileClick = (clientId: number | null | undefined) => {
+    if (clientId) {
+      router.push(`/clients/${clientId}`);
+    }
+  };
+
   return (
     <TooltipProvider delayDuration={200}>
       <div className="w-full font-sans antialiased select-none">
         
-        {/* 1. ДЕСКТОПНА ВЕРСІЯ ТАБЛИЦІ (УСУНЕНО ГОРИЗОНТАЛЬНИЙ СКРОЛ) */}
-        {/* Прибрано фіксований overflow-x-auto для великих екранів, таблиця тепер займає строго 100% ширини */}
+        {/* 1. ДЕСКТОПНА ВЕРСІЯ ТАБЛИЦІ */}
         <div className="hidden md:block w-full bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-          {/* ОНОВЛЕНО: Замінено table-fixed на table-auto та прибрано жорсткі відсоткові ширини колон") */}
           <table className="w-full border-collapse text-left table-auto">
             <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
               <tr>
@@ -208,13 +213,24 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
                             <TooltipContent className="bg-slate-900 text-white font-semibold text-xs rounded-lg px-2.5 py-1"><p>Редагувати</p></TooltipContent>
                           </Tooltip>
 
+                          {/* 👑 КНОПКА 2: Оновлено під перехід на клієнта */}
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <button className="p-2 bg-sky-50 hover:bg-sky-100 text-sky-600 rounded-xl transition border border-sky-100/60 cursor-pointer">
+                              <button 
+                                onClick={() => handleClientProfileClick(item.clientId)} 
+                                disabled={!item.clientId}
+                                className={`p-2 rounded-xl transition border cursor-pointer ${
+                                  item.clientId 
+                                    ? "bg-sky-50 hover:bg-sky-100 text-sky-600 border-sky-100/60" 
+                                    : "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed"
+                                }`}
+                              >
                                 <User size={13} />
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent className="bg-slate-900 text-white font-semibold text-xs rounded-lg px-2.5 py-1"><p>Історія клієнта</p></TooltipContent>
+                            <TooltipContent className="bg-slate-900 text-white font-semibold text-xs rounded-lg px-2.5 py-1">
+                              <p>{item.clientId ? "Профіль клієнта" : "Контрагент відсутній"}</p>
+                            </TooltipContent>
                           </Tooltip>
 
                           <Tooltip>
@@ -318,9 +334,23 @@ export default function ScheduleTable({ schedules, loading, onEditClick, onDelet
                     </p>
                   </div>
 
+                  {/* Блок швидких дій для мобільної версії */}
                   <div className="grid grid-cols-3 gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => onEditClick(item.id)} className="flex justify-center py-2 bg-amber-50 active:bg-amber-100 text-amber-600 rounded-xl border border-amber-100/60 cursor-pointer"><Edit2 size={14} /></button>
-                    <button className="flex justify-center py-2 bg-sky-50 active:bg-sky-100 text-sky-600 rounded-xl border border-sky-100/60 cursor-pointer"><User size={14} /></button>
+                    
+                    {/* 👑 МОБІЛЬНА КНОПКА: Перехід на профіль контрагента */}
+                    <button 
+                      onClick={() => handleClientProfileClick(item.clientId)} 
+                      disabled={!item.clientId}
+                      className={`flex justify-center py-2 rounded-xl border cursor-pointer ${
+                        item.clientId 
+                          ? "bg-sky-50 active:bg-sky-100 text-sky-600 border-sky-100/60" 
+                          : "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed"
+                      }`}
+                    >
+                      <User size={14} />
+                    </button>
+                    
                     <button onClick={() => onDeleteClick(item.id)} className="flex justify-center py-2 bg-rose-50 active:bg-rose-100 text-rose-600 rounded-xl border border-rose-100/60 cursor-pointer"><Trash2 size={14} /></button>
                   </div>
                 </div>
